@@ -494,17 +494,19 @@ async function dbDeletePhoto(empId){
 }
 
 // 전체 데이터 캐시
-let _cache={employees:[],photos:{},assignments:{},evaluations:{},leaves:{},disciplines:{}};
+// notes도 캐시에 포함
+let _cache={employees:[],photos:{},assignments:{},evaluations:{},leaves:{},disciplines:{},notes:{}};
 
 async function loadAllData(){
   try{
-    const[empsRes,photosRes,assignsRes,evalsRes,leavesRes,discsRes]=await Promise.all([
+    const[empsRes,photosRes,assignsRes,evalsRes,leavesRes,discsRes,notesRes]=await Promise.all([
       supa.from('employees').select('*').order('created_at'),
       supa.from('photos').select('employee_id,url'),
       supa.from('assignments').select('employee_id,data').order('created_at'),
       supa.from('evaluations').select('*'),
       supa.from('leaves').select('employee_id,data').order('created_at'),
       supa.from('disciplines').select('employee_id,data').order('created_at'),
+      supa.from('notes').select('employee_id,content'),
     ]);
     _cache.employees=(empsRes.data||[]).map(r=>({_id:r.id,...r.data,emp_id:r.emp_id,name_kr:r.name_kr}));
     _cache.photos={};(photosRes.data||[]).forEach(p=>{_cache.photos[p.employee_id]=p.url});
@@ -512,6 +514,7 @@ async function loadAllData(){
     _cache.evaluations={};(evalsRes.data||[]).forEach(e=>{if(!_cache.evaluations[e.employee_id])_cache.evaluations[e.employee_id]=[];_cache.evaluations[e.employee_id].push({year:e.year,type:e.type,grade:e.grade,note:e.note})});
     _cache.leaves={};(leavesRes.data||[]).forEach(l=>{if(!_cache.leaves[l.employee_id])_cache.leaves[l.employee_id]=[];_cache.leaves[l.employee_id].push(l.data)});
     _cache.disciplines={};(discsRes.data||[]).forEach(d=>{if(!_cache.disciplines[d.employee_id])_cache.disciplines[d.employee_id]=[];_cache.disciplines[d.employee_id].push(d.data)});
+    _cache.notes={};(notesRes.data||[]).forEach(n=>{_cache.notes[n.employee_id]=n.content});
   }catch(e){console.error(e);toast('데이터 로드 실패','err')}
 }
 
