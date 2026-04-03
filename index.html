@@ -680,6 +680,16 @@ function NAV(pg){
   document.getElementById('pt').textContent=PAGE_TITLES[pg]||pg;
   ({dashboard:renderDash,employees:renderEmps,resign:renderResign,assign:renderAssign,leave:renderLeave,eval:renderEval,discipline:renderDisc,photos:renderPhotos,upload:renderUpload,download:renderDlPage,settings:renderSettings})[pg]?.();
 }
+// 영구 이벤트 위임 — cnt는 절대 교체되지 않으므로 앱 시작 시 한 번만 등록
+(function initGlobalDelegation(){
+  const cnt = document.getElementById('cnt');
+  cnt.addEventListener('click', function(e){
+    // 직원 행 클릭
+    const empRow = e.target.closest('._emp-row');
+    if(empRow){ openDetailModal(empRow.dataset.id); return; }
+  });
+})();
+
 function buildSidebar(){
   document.getElementById('sb-nav').innerHTML=ALL_MENUS.map(m=>{
     const required=MENU_ROLE[m.id]||'viewer';
@@ -819,13 +829,7 @@ function renderEmpTbl(){
   }).join('');
   const tblEl=document.getElementById('emp-tbl');
   tblEl.innerHTML=`<div class="tw"><table><thead><tr><th>EMP ID</th><th>이름</th><th>Group</th><th>Team</th><th>Job Title</th><th>고용형태</th><th>상태</th><th>Tech</th><th>입사일</th><th>퇴직일</th></tr></thead><tbody>${rows||'<tr><td colspan="10" class="empty">데이터 없음</td></tr>'}</tbody></table></div>`;
-  // 이벤트 위임: 컨테이너에 한 번만 등록, 기존 리스너 제거 후 재등록
-  tblEl.removeEventListener('click', tblEl._empClickHandler);
-  tblEl._empClickHandler = function(e){
-    const row = e.target.closest('._emp-row');
-    if(row) openDetailModal(row.dataset.id);
-  };
-  tblEl.addEventListener('click', tblEl._empClickHandler);
+  // 클릭 이벤트는 cnt 전역 위임으로 처리 (buildSidebar 위에서 등록)
   let pg=`<div class="pg"><span class="pg-inf">총 ${total}명</span><div class="pg-bs"><div class="pg-b" id="pg-prev">‹</div>`;
   for(let i=1;i<=Math.min(pages,7);i++)pg+=`<div class="pg-b${i===empPage?' on':''}" data-p="${i}">${i}</div>`;
   if(pages>7)pg+=`<span style="padding:0 4px">…</span><div class="pg-b${pages===empPage?' on':''}" data-p="${pages}">${pages}</div>`;
@@ -1393,36 +1397,24 @@ function openPhotoModal(empId){
   </div>
   ${ph[empId]?`<div style="margin-top:8px;text-align:center"><button class="btn btn-d btn-sm" id="btn-ph-del">사진 삭제</button></div>`:''}`;
 
-  // 이벤트 중복 방지: 기존 핸들러 제거 후 재등록
-  const phUz = document.getElementById('ph-uz');
-  const phFile = document.getElementById('ph-file');
+  document.getElementById('ph-uz').addEventListener('click', () => document.getElementById('ph-file').click());
 
-  // ph-uz 클릭 → 파일 선택창 열기
-  const phUzHandler = () => phFile.click();
-  phUz.replaceWith(phUz.cloneNode(true)); // 기존 리스너 제거
-  document.getElementById('ph-uz').addEventListener('click', phUzHandler);
-
-  // 파일 선택 후 Storage 업로드
-  const newPhFile = document.getElementById('ph-file');
-  newPhFile.replaceWith(newPhFile.cloneNode(true));
-  const freshPhFile = document.getElementById('ph-file');
-  document.getElementById('ph-uz').addEventListener('click', () => freshPhFile.click());
-
-  freshPhFile.addEventListener('change', async function(){
+  document.getElementById('ph-file').addEventListener('change', async function(){
     const file = this.files[0]; if(!file) return;
-    const prevBtn = document.getElementById('ph-uz');
-    if(prevBtn) prevBtn.textContent = '업로드 중...';
+    document.getElementById('ph-uz').innerHTML = '<div style="font-size:13px;color:var(--mg-d);font-weight:700">⏳ 업로드 중...</div>';
     try{
       const url = await dbUpsertPhoto(curPhotoEmpId, file);
       await loadAllData();
       const preview = document.getElementById('ph-preview');
       if(preview) preview.innerHTML = `<img src="${url}" style="width:90px;height:112px;object-fit:cover;border-radius:var(--r);border:2px solid var(--mg-m)">`;
-      toast('저장 완료','ok');
-    }catch(e){
-      console.error('사진 업로드 오류:', e);
-      toast('저장 실패: '+e.message,'err');
+      document.getElementById('ph-uz').innerHTML = '<div style="font-size:13px;color:var(--g500)">📷 클릭하여 업로드</div><div style="font-size:11px;color:var(--g400);margin-top:4px">Storage에 저장됩니다</div>';
+      toast('사진 저장 완료 ✅','ok');
+    }catch(err){
+      console.error('사진 업로드 오류:', err);
+      document.getElementById('ph-uz').innerHTML = '<div style="font-size:13px;color:var(--g500)">📷 클릭하여 업로드</div>';
+      toast('저장 실패: '+err.message,'err');
     }
-    this.value='';
+    this.value = '';
   });
 
   document.getElementById('btn-ph-url').addEventListener('click',async()=>{
