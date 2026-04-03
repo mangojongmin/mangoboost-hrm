@@ -566,8 +566,7 @@ async function initAuth(){
 async function onLogin(user){
   _currentUser=user;
   document.getElementById('auth').style.display='none';
-  document.getElementById('loading').style.display='flex';
-  await loadAllData();
+  // 로딩 화면 없이 바로 앱 표시
   document.getElementById('loading').style.display='none';
   document.getElementById('app').style.display='block';
   const name=user.user_metadata?.full_name||user.email?.split('@')[0]||'사용자';
@@ -577,6 +576,10 @@ async function onLogin(user){
   document.getElementById('sb-badge').innerHTML='<span class="badge-master">HR Admin</span>';
   buildSidebar();
   document.getElementById('tb-dt').textContent=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'});
+  // 대시보드 먼저 보여주고 백그라운드에서 데이터 로드
+  NAV('dashboard');
+  await loadAllData();
+  // 데이터 로드 완료 후 현재 페이지 새로고침
   NAV('dashboard');
 }
 
