@@ -19,7 +19,9 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--g100);color:var(--g800);font-size:13px;line-height:1.5}
-#auth{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(150deg,#FFF8ED,#FEF0D0,#FDDDA0)}
+
+/* AUTH */
+#auth{display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(150deg,#FFF8ED,#FEF0D0,#FDDDA0)}
 .ac{background:#fff;border-radius:20px;padding:44px 40px;width:380px;box-shadow:0 20px 60px rgba(245,166,35,.18);text-align:center}
 .albl{font-size:11px;font-weight:700;color:var(--g600);text-align:left;margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
 .ainp{width:100%;padding:10px 13px;border:1.5px solid var(--g200);border-radius:var(--r);font-size:13px;outline:none;margin-bottom:12px}
@@ -31,6 +33,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .gbtn{width:100%;padding:10px;background:#fff;border:1.5px solid var(--g200);border-radius:var(--r);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--g700)}
 .gbtn:hover{background:var(--g50)}
 .aerr{color:var(--red);font-size:12px;margin:-4px 0 8px;text-align:left;display:none}
+
+/* APP */
 #app{display:none;min-height:100vh}
 .layout{display:flex;min-height:100vh}
 .sb{width:var(--sw);background:var(--g900);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:200;overflow-y:auto}
@@ -40,12 +44,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .ni{display:flex;align-items:center;gap:8px;padding:7px 16px;font-size:12px;color:rgba(255,255,255,.5);cursor:pointer;transition:all .15s;border-left:2px solid transparent}
 .ni:hover{color:#fff;background:rgba(255,255,255,.05)}
 .ni.active{color:#fff;background:rgba(245,166,35,.14);border-left-color:var(--mg)}
+.ni.locked{opacity:.4;cursor:not-allowed;pointer-events:none}
 .ni svg{width:14px;height:14px;flex-shrink:0}
+.ni .lock{font-size:9px;background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px;margin-left:auto;color:rgba(255,255,255,.3)}
 .sb-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07)}
 .sb-av{width:28px;height:28px;border-radius:50%;background:var(--mg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
 .sb-un{font-size:12px;font-weight:600;color:#fff}
 .sb-ue{font-size:10px;color:rgba(255,255,255,.4)}
 .badge-master{font-size:9px;background:var(--mg);color:#fff;padding:1px 6px;border-radius:10px;font-weight:700}
+.badge-admin{font-size:9px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.7);padding:1px 6px;border-radius:10px}
+.badge-viewer{font-size:9px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);padding:1px 6px;border-radius:10px}
 .main{margin-left:var(--sw);flex:1;display:flex;flex-direction:column}
 .topbar{background:#fff;border-bottom:1px solid var(--g200);padding:0 22px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--sh)}
 .pg-title{font-size:14px;font-weight:700}
@@ -140,10 +148,13 @@ tbody tr:last-child td{border-bottom:none}
 .ed-table th{background:var(--g50);padding:6px 10px;text-align:left;font-size:10px;font-weight:700;color:var(--g500);text-transform:uppercase;border-bottom:1px solid var(--g200)}
 .ed-table td{padding:6px 10px;border-bottom:1px solid var(--g100)}
 .ed-table tr:last-child td{border-bottom:none}
+.warn-box{background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:var(--r);padding:7px 11px;font-size:11px;color:#9A3412;font-weight:600}
 .leave-info-box{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:var(--r);padding:6px 10px;font-size:11px;color:#1D4ED8;font-weight:600;margin-top:3px}
 .resign-info-box{background:#FFF1F2;border:1px solid #FFE4E6;border-radius:var(--r);padding:6px 10px;font-size:11px;color:#9F1239;font-weight:600;margin-top:3px}
 tr.row-resigned td{background:#fff5f5!important}
 tr.row-leave td{background:#f0f7ff!important}
+tr.row-resigned:hover td{background:#fee2e2!important}
+tr.row-leave:hover td{background:#dbeafe!important}
 .uz{border:2px dashed var(--g300);border-radius:var(--r-lg);padding:32px;text-align:center;cursor:pointer;transition:all .2s;background:var(--g50)}
 .uz:hover,.uz.dov{border-color:var(--mg);background:var(--mg-l)}
 .pbw{height:4px;background:var(--g200);border-radius:3px;overflow:hidden;margin-top:6px}
@@ -174,14 +185,16 @@ input[type=checkbox]{accent-color:var(--mg);width:12px;height:12px;cursor:pointe
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-thumb{background:var(--g300);border-radius:2px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-/* 버튼 로딩 상태 */
-.btn:disabled{opacity:.6;cursor:not-allowed}
+/* role badge colors */
+.role-master{background:var(--mg);color:#fff}
+.role-admin{background:var(--blue-l);color:var(--blue)}
+.role-viewer{background:var(--g200);color:var(--g600)}
 </style>
 </head>
 <body>
 
 <!-- AUTH -->
-<div id="auth" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(150deg,#FFF8ED,#FEF0D0,#FDDDA0)">
+<div id="auth" style="display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(150deg,#FFF8ED,#FEF0D0,#FDDDA0)">
  <div class="ac">
   <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:22px">
    <svg width="72" height="72" viewBox="0 0 200 200" fill="none">
@@ -213,7 +226,7 @@ input[type=checkbox]{accent-color:var(--mg);width:12px;height:12px;cursor:pointe
 </div>
 
 <!-- APP -->
-<div id="app" style="display:none">
+<div id="app">
 <div class="layout">
 <nav class="sb">
  <div class="sb-logo">
@@ -260,13 +273,30 @@ input[type=checkbox]{accent-color:var(--mg);width:12px;height:12px;cursor:pointe
 <div class="mb" id="m-leave"><div class="md md-lg"><div class="md-h"><span class="md-t" id="m-leave-t">휴복직 등록</span><button class="md-x" id="m-leave-x">✕</button></div><div class="md-b" id="m-leave-b"></div><div class="md-f"><button class="btn btn-s" id="m-leave-cancel">취소</button><button class="btn btn-p" id="m-leave-save">저장</button></div></div></div>
 <div class="mb" id="m-disc"><div class="md"><div class="md-h"><span class="md-t" id="m-disc-t">징계 등록</span><button class="md-x" id="m-disc-x">✕</button></div><div class="md-b" id="m-disc-b"></div><div class="md-f"><button class="btn btn-s" id="m-disc-cancel">취소</button><button class="btn btn-p" id="m-disc-save">저장</button></div></div></div>
 <div class="mb" id="m-note"><div class="md md-sm"><div class="md-h"><span class="md-t" id="m-note-t">특이사항</span><button class="md-x" id="m-note-x">✕</button></div><div class="md-b" id="m-note-b"></div><div class="md-f"><button class="btn btn-s" id="m-note-cancel">취소</button><button class="btn btn-p" id="m-note-save">저장</button></div></div></div>
+<!-- ✅ 수정: m-master 모달 내용 완성 -->
+<div class="mb" id="m-master"><div class="md md-sm"><div class="md-h"><span class="md-t">Master 권한 양도</span><button class="md-x" id="m-master-x">✕</button></div><div class="md-b" id="m-master-b"></div><div class="md-f"><button class="btn btn-s" id="m-master-cancel">취소</button><button class="btn btn-d" id="m-master-ok">양도 확정</button></div></div></div>
 <div class="toast" id="toast"></div>
 <div id="popup-root"></div>
 
 <script>
-const SUPA_URL='https://yqznejhqgljigyjsynsq.supabase.co';
-const SUPA_KEY='sb_publishable_ZvGfJYXa8Z9yF9RlmA7YVw_hfY9v1p_';
-const supa=supabase.createClient(SUPA_URL,SUPA_KEY);
+// ══════════════ SUPABASE 초기화 ══════════════
+const SUPA_URL = 'https://yqznejhqgljigyjsynsq.supabase.co';
+const SUPA_KEY = 'sb_publishable_ZvGfJYXa8Z9yF9RlmA7YVw_hfY9v1p_';
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// ══════════════ CONSTANTS ══════════════
+// 권한 정의: master > admin > viewer
+// master  : 모든 기능 + 권한관리 + Master 양도
+// admin   : 모든 기능 (설정/권한관리 제외)
+// viewer  : 대시보드·직원목록·엑셀다운로드 읽기 전용
+const ROLES = { master: 3, admin: 2, viewer: 1 };
+// 메뉴별 최소 권한
+const MENU_ROLE = {
+  dashboard: 'viewer', employees: 'viewer', resign: 'admin',
+  assign: 'admin', leave: 'admin', eval: 'admin',
+  discipline: 'admin', photos: 'admin', upload: 'admin',
+  download: 'viewer', settings: 'master',
+};
 
 const ALL_MENUS=[
   {id:'dashboard',label:'대시보드',icon:'M2 2h5v5H2zM9 2h5v5H9zM2 9h5v5H2zM9 9h5v5H9z'},
@@ -303,31 +333,156 @@ const DATE_KEYS=['joinDate','contractJoinDate','regularDate','visaEnd','contract
 const EVAL_GRADES={performance:['MVC','VC','FC','PC','LC'],corevalue:['EX','ME','ND'],final:['O','EE','ME','BE','NI']};
 const LEAVE_TYPES=['육아휴직','상병휴직','난임휴직','기타휴직','입영휴직'];
 const DISC_TYPES=['경고','견책','감봉','정직','해고'];
+// Supabase Storage 버킷명
+const PHOTO_BUCKET = 'employee-photos';
 
 let selCols=new Set(COLS.map(c=>c.k));
 let curEditId=null,curAssignEmpId=null,curEvalEmpId=null,curPhotoEmpId=null;
 let curLeaveEmpId=null,curDiscEmpId=null,curNoteEmpId=null;
 let empPage=1,empQ='',empFG='',empFT='',empFS='';
 const PER=20;
-let dlChart=null,_currentUser=null;
-let _cache={employees:[],photos:{},assignments:{},evaluations:{},leaves:{},disciplines:{}};
+let dlChart=null;
+let _currentUser=null;
+let _currentRole='viewer'; // 현재 사용자 권한
+let _masterTransferTarget=null; // 권한 양도 대상
 
-// ── 날짜 헬퍼 ──
+// ══════════════ 권한 헬퍼 ══════════════
+function hasRole(required){
+  return ROLES[_currentRole] >= ROLES[required];
+}
+function requireRole(required, fn){
+  if(!hasRole(required)){toast('권한이 없습니다.','err');return}
+  fn();
+}
+
+// ══════════════ DATE HELPERS ══════════════
 function xlsSerial(n){const d=new Date(Date.UTC(1899,11,30)+Number(n)*86400000);return`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`}
-function normDate(v){if(!v&&v!==0)return'';const s=String(v).trim();if(!s)return'';if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;if(/^\d{4}\/\d{2}\/\d{2}$/.test(s))return s.replace(/\//g,'-');const n=Number(s);if(!isNaN(n)&&n>20000&&n<100000)return xlsSerial(n);const d=new Date(s);if(!isNaN(d.getTime()))return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;return s}
+function normDate(v){
+  if(!v&&v!==0)return'';const s=String(v).trim();if(!s)return'';
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  if(/^\d{4}\/\d{2}\/\d{2}$/.test(s))return s.replace(/\//g,'-');
+  const n=Number(s);if(!isNaN(n)&&n>20000&&n<100000)return xlsSerial(n);
+  const d=new Date(s);if(!isNaN(d.getTime()))return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return s;
+}
 function parseDate(s){if(!s)return null;const m=String(s).match(/^(\d{4})[-\/](\d{2})[-\/](\d{2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);const d=new Date(s);return isNaN(d)?null:d}
 function dateLE(a,b){if(!a||!b)return false;return a.getFullYear()*10000+a.getMonth()*100+a.getDate()<=b.getFullYear()*10000+b.getMonth()*100+b.getDate()}
 function dateLT(a,b){if(!a||!b)return false;return a.getFullYear()*10000+a.getMonth()*100+a.getDate()<b.getFullYear()*10000+b.getMonth()*100+b.getDate()}
 function fmtTenure(s){if(!s)return'-';const jd=parseDate(s);if(!jd)return'-';const now=new Date();const months=(now.getFullYear()-jd.getFullYear())*12+(now.getMonth()-jd.getMonth());if(months<1)return'1개월 미만';const y=Math.floor(months/12),m=months%12;return y===0?`${m}개월`:`${y}년 ${m}개월 (총 ${months}개월)`}
 function calcAge(s){if(!s)return'';const bd=parseDate(s);if(!bd)return'';const now=new Date();let age=now.getFullYear()-bd.getFullYear();if(now.getMonth()<bd.getMonth()||(now.getMonth()===bd.getMonth()&&now.getDate()<bd.getDate()))age--;return String(age)}
 
-// ── 버튼 로딩 헬퍼 ──
-function btnLoading(id,v,text='저장'){const el=document.getElementById(id);if(!el)return;el.disabled=v;el.textContent=v?'저장 중...':text}
+// ══════════════ SUPABASE DB 함수 ══════════════
+async function dbGetEmployees(){
+  const {data,error}=await supa.from('employees').select('*').order('created_at');
+  if(error){console.error(error);return[]}
+  return data.map(r=>({_id:r.id,...r.data,emp_id:r.emp_id,name_kr:r.name_kr}));
+}
+async function dbUpsertEmployee(emp){
+  const {_id,...rest}=emp;
+  const row={emp_id:rest.empId||null,name_kr:rest.nameKr||null,data:rest,updated_at:new Date().toISOString()};
+  if(_id&&!_id.startsWith('new_')){
+    const{error}=await supa.from('employees').update(row).eq('id',_id);
+    if(error)throw error;return _id;
+  } else {
+    const{data,error}=await supa.from('employees').insert(row).select('id').single();
+    if(error)throw error;return data.id;
+  }
+}
+async function dbDeleteEmployee(id){const{error}=await supa.from('employees').delete().eq('id',id);if(error)throw error}
 
-// ── Supabase DB ──
+async function dbGetAssignments(empId){const{data,error}=await supa.from('assignments').select('*').eq('employee_id',empId).order('created_at');if(error)return[];return(data||[]).map(r=>r.data)}
+async function dbAddAssignment(empId,assignData){const{error}=await supa.from('assignments').insert({employee_id:empId,data:assignData});if(error)throw error}
+async function dbDeleteAssignment(empId,idx){const{data}=await supa.from('assignments').select('id').eq('employee_id',empId).order('created_at');if(data&&data[idx]){await supa.from('assignments').delete().eq('id',data[idx].id)}}
+
+async function dbGetEvaluations(empId){const{data,error}=await supa.from('evaluations').select('*').eq('employee_id',empId);if(error)return[];return(data||[]).map(r=>({year:r.year,type:r.type,grade:r.grade,note:r.note}))}
+async function dbUpsertEvaluation(empId,year,type,grade,note){
+  const{data:existing}=await supa.from('evaluations').select('id').eq('employee_id',empId).eq('year',year).eq('type',type);
+  if(existing&&existing.length>0){await supa.from('evaluations').update({grade,note}).eq('id',existing[0].id)}
+  else{await supa.from('evaluations').insert({employee_id:empId,year,type,grade,note})}
+}
+
+async function dbGetLeaves(empId){const{data,error}=await supa.from('leaves').select('*').eq('employee_id',empId).order('created_at');if(error)return[];return(data||[]).map(r=>r.data)}
+async function dbAddLeave(empId,leaveData){const{error}=await supa.from('leaves').insert({employee_id:empId,data:leaveData});if(error)throw error}
+async function dbDeleteLeave(empId,idx){const{data}=await supa.from('leaves').select('id').eq('employee_id',empId).order('created_at');if(data&&data[idx]){await supa.from('leaves').delete().eq('id',data[idx].id)}}
+
+async function dbGetDisciplines(empId){const{data,error}=await supa.from('disciplines').select('*').eq('employee_id',empId).order('created_at');if(error)return[];return(data||[]).map(r=>r.data)}
+async function dbAddDiscipline(empId,discData){const{error}=await supa.from('disciplines').insert({employee_id:empId,data:discData});if(error)throw error}
+async function dbDeleteDiscipline(empId,idx){const{data}=await supa.from('disciplines').select('id').eq('employee_id',empId).order('created_at');if(data&&data[idx]){await supa.from('disciplines').delete().eq('id',data[idx].id)}}
+
+async function dbGetNote(empId){const{data}=await supa.from('notes').select('content').eq('employee_id',empId).single();return data?data.content:''}
+async function dbUpsertNote(empId,content){const{data:ex}=await supa.from('notes').select('id').eq('employee_id',empId);if(ex&&ex.length>0){await supa.from('notes').update({content,updated_at:new Date().toISOString()}).eq('employee_id',empId)}else{await supa.from('notes').insert({employee_id:empId,content})}}
+
+// ── 권한(admins 테이블) DB 함수 ──
+async function dbGetAllAdmins(){
+  const{data,error}=await supa.from('admins').select('*').order('created_at');
+  if(error){console.error('admins load error',error);return[]}
+  return data||[];
+}
+async function dbGetMyRole(userId){
+  const{data}=await supa.from('admins').select('role').eq('user_id',userId).single();
+  return data?data.role:'viewer';
+}
+async function dbUpsertAdminRole(userId,email,role){
+  const{data:ex}=await supa.from('admins').select('id').eq('user_id',userId);
+  if(ex&&ex.length>0){
+    await supa.from('admins').update({role,email}).eq('user_id',userId);
+  } else {
+    await supa.from('admins').insert({user_id:userId,email,role});
+  }
+}
+async function dbDeleteAdmin(userId){
+  await supa.from('admins').delete().eq('user_id',userId);
+}
+async function dbTransferMaster(fromUserId,toUserId,toEmail){
+  // 기존 master → admin 강등, 대상 → master 승격
+  await supa.from('admins').update({role:'admin'}).eq('user_id',fromUserId);
+  const{data:ex}=await supa.from('admins').select('id').eq('user_id',toUserId);
+  if(ex&&ex.length>0){
+    await supa.from('admins').update({role:'master'}).eq('user_id',toUserId);
+  } else {
+    await supa.from('admins').insert({user_id:toUserId,email:toEmail,role:'master'});
+  }
+}
+
+// ✅ 수정: 사진 → Supabase Storage 업로드
+async function dbUpsertPhoto(empId,fileOrUrl){
+  // fileOrUrl 이 File 객체면 Storage 업로드, 문자열이면 URL 직접 저장
+  let url = fileOrUrl;
+  if(fileOrUrl instanceof File){
+    const ext = fileOrUrl.name.split('.').pop() || 'jpg';
+    const path = `${empId}.${ext}`;
+    // upsert: 같은 경로에 덮어쓰기
+    const{error:upErr} = await supa.storage.from(PHOTO_BUCKET).upload(path, fileOrUrl, {upsert:true, contentType:fileOrUrl.type});
+    if(upErr) throw upErr;
+    const{data:pub} = supa.storage.from(PHOTO_BUCKET).getPublicUrl(path);
+    // 캐시 무효화를 위해 timestamp 쿼리 추가
+    url = pub.publicUrl + '?t=' + Date.now();
+  }
+  // photos 테이블에 URL 저장
+  const{data:ex}=await supa.from('photos').select('id').eq('employee_id',empId);
+  if(ex&&ex.length>0){
+    await supa.from('photos').update({url}).eq('employee_id',empId);
+  } else {
+    await supa.from('photos').insert({employee_id:empId,url});
+  }
+  return url;
+}
+async function dbDeletePhoto(empId){
+  // Storage 파일 삭제 시도 (파일명 패턴으로 리스트 후 삭제)
+  const{data:files}=await supa.storage.from(PHOTO_BUCKET).list('',{search:empId});
+  if(files&&files.length){
+    const paths=files.map(f=>f.name);
+    await supa.storage.from(PHOTO_BUCKET).remove(paths);
+  }
+  await supa.from('photos').delete().eq('employee_id',empId);
+}
+
+// 전체 데이터 캐시
+let _cache={employees:[],photos:{},assignments:{},evaluations:{},leaves:{},disciplines:{}};
+
 async function loadAllData(){
   try{
-    const[e,p,a,ev,l,d]=await Promise.all([
+    const[empsRes,photosRes,assignsRes,evalsRes,leavesRes,discsRes]=await Promise.all([
       supa.from('employees').select('*').order('created_at'),
       supa.from('photos').select('employee_id,url'),
       supa.from('assignments').select('employee_id,data').order('created_at'),
@@ -335,14 +490,15 @@ async function loadAllData(){
       supa.from('leaves').select('employee_id,data').order('created_at'),
       supa.from('disciplines').select('employee_id,data').order('created_at'),
     ]);
-    _cache.employees=(e.data||[]).map(r=>({_id:r.id,...r.data,emp_id:r.emp_id,name_kr:r.name_kr}));
-    _cache.photos={};(p.data||[]).forEach(x=>{_cache.photos[x.employee_id]=x.url});
-    _cache.assignments={};(a.data||[]).forEach(x=>{if(!_cache.assignments[x.employee_id])_cache.assignments[x.employee_id]=[];_cache.assignments[x.employee_id].push(x.data)});
-    _cache.evaluations={};(ev.data||[]).forEach(x=>{if(!_cache.evaluations[x.employee_id])_cache.evaluations[x.employee_id]=[];_cache.evaluations[x.employee_id].push({year:x.year,type:x.type,grade:x.grade,note:x.note})});
-    _cache.leaves={};(l.data||[]).forEach(x=>{if(!_cache.leaves[x.employee_id])_cache.leaves[x.employee_id]=[];_cache.leaves[x.employee_id].push(x.data)});
-    _cache.disciplines={};(d.data||[]).forEach(x=>{if(!_cache.disciplines[x.employee_id])_cache.disciplines[x.employee_id]=[];_cache.disciplines[x.employee_id].push(x.data)});
-  }catch(e){console.error('loadAllData error:',e);toast('데이터 로드 실패','err')}
+    _cache.employees=(empsRes.data||[]).map(r=>({_id:r.id,...r.data,emp_id:r.emp_id,name_kr:r.name_kr}));
+    _cache.photos={};(photosRes.data||[]).forEach(p=>{_cache.photos[p.employee_id]=p.url});
+    _cache.assignments={};(assignsRes.data||[]).forEach(a=>{if(!_cache.assignments[a.employee_id])_cache.assignments[a.employee_id]=[];_cache.assignments[a.employee_id].push(a.data)});
+    _cache.evaluations={};(evalsRes.data||[]).forEach(e=>{if(!_cache.evaluations[e.employee_id])_cache.evaluations[e.employee_id]=[];_cache.evaluations[e.employee_id].push({year:e.year,type:e.type,grade:e.grade,note:e.note})});
+    _cache.leaves={};(leavesRes.data||[]).forEach(l=>{if(!_cache.leaves[l.employee_id])_cache.leaves[l.employee_id]=[];_cache.leaves[l.employee_id].push(l.data)});
+    _cache.disciplines={};(discsRes.data||[]).forEach(d=>{if(!_cache.disciplines[d.employee_id])_cache.disciplines[d.employee_id]=[];_cache.disciplines[d.employee_id].push(d.data)});
+  }catch(e){console.error(e);toast('데이터 로드 실패','err')}
 }
+
 function DB(){return _cache.employees}
 function PHDB(){return _cache.photos}
 function ADB(){return _cache.assignments}
@@ -350,25 +506,7 @@ function EVDB(){return _cache.evaluations}
 function LVDB(){return _cache.leaves}
 function DCDB(){return _cache.disciplines}
 
-async function dbUpsertEmployee(emp){
-  const{_id,...rest}=emp;
-  const row={emp_id:rest.empId||null,name_kr:rest.nameKr||null,data:rest,updated_at:new Date().toISOString()};
-  if(_id){const{error}=await supa.from('employees').update(row).eq('id',_id);if(error)throw error;return _id}
-  else{const{data,error}=await supa.from('employees').insert(row).select('id').single();if(error)throw error;return data.id}
-}
-async function dbDeleteEmployee(id){const{error}=await supa.from('employees').delete().eq('id',id);if(error)throw error}
-async function dbAddAssignment(empId,data){const{error}=await supa.from('assignments').insert({employee_id:empId,data});if(error)throw error}
-async function dbDeleteAssignment(empId,idx){const{data}=await supa.from('assignments').select('id').eq('employee_id',empId).order('created_at');if(data&&data[idx]){const{error}=await supa.from('assignments').delete().eq('id',data[idx].id);if(error)throw error}}
-async function dbUpsertEvaluation(empId,year,type,grade,note){const{data:ex}=await supa.from('evaluations').select('id').eq('employee_id',empId).eq('year',year).eq('type',type);if(ex&&ex.length>0){await supa.from('evaluations').update({grade,note}).eq('id',ex[0].id)}else{await supa.from('evaluations').insert({employee_id:empId,year,type,grade,note})}}
-async function dbAddLeave(empId,data){const{error}=await supa.from('leaves').insert({employee_id:empId,data});if(error)throw error}
-async function dbDeleteLeave(empId,idx){const{data}=await supa.from('leaves').select('id').eq('employee_id',empId).order('created_at');if(data&&data[idx]){await supa.from('leaves').delete().eq('id',data[idx].id)}}
-async function dbAddDiscipline(empId,data){const{error}=await supa.from('disciplines').insert({employee_id:empId,data});if(error)throw error}
-async function dbDeleteDiscipline(empId,idx){const{data}=await supa.from('disciplines').select('id').eq('employee_id',empId).order('created_at');if(data&&data[idx]){await supa.from('disciplines').delete().eq('id',data[idx].id)}}
-async function dbGetNote(empId){const{data}=await supa.from('notes').select('content').eq('employee_id',empId).maybeSingle();return data?data.content:''}
-async function dbUpsertNote(empId,content){const{data:ex}=await supa.from('notes').select('id').eq('employee_id',empId);if(ex&&ex.length>0){await supa.from('notes').update({content,updated_at:new Date().toISOString()}).eq('employee_id',empId)}else{await supa.from('notes').insert({employee_id:empId,content})}}
-async function dbUpsertPhoto(empId,url){const{data:ex}=await supa.from('photos').select('id').eq('employee_id',empId);if(ex&&ex.length>0){await supa.from('photos').update({url}).eq('employee_id',empId)}else{await supa.from('photos').insert({employee_id:empId,url})}}
-
-// ── 날짜 피커 ──
+// ══════════════ DATE PICKER ══════════════
 const _dpSt={};
 function dpHTML(id,val=''){return`<div class="dp-wrap" id="dpw-${id}"><input class="finp" id="${id}" value="${val}" placeholder="YYYY-MM-DD" autocomplete="off"><div class="dp-cal" id="dpc-${id}"></div></div>`}
 function dpInit(id){
@@ -376,17 +514,33 @@ function dpInit(id){
   const v=inp.value;const m=v.match(/^(\d{4})-(\d{2})-(\d{2})$/);const now=new Date();
   _dpSt[id]={y:m?+m[1]:now.getFullYear(),mo:m?+m[2]-1:now.getMonth(),mode:'day'};
   inp.addEventListener('click',function(e){e.stopPropagation();document.querySelectorAll('.dp-cal.open').forEach(c=>{if(c!==cal)c.classList.remove('open')});dpRender(id);cal.classList.toggle('open')});
-  inp.addEventListener('input',function(){const raw=this.value.replace(/-/g,'');let str=this.value.trim();if(/^\d{8}$/.test(raw))str=`${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`;const mm=str.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(mm){this.value=str;_dpSt[id]={y:+mm[1],mo:+mm[2]-1,mode:'day'};dpRender(id);cal.classList.add('open')}});
+  inp.addEventListener('input',function(){
+    const raw=this.value.replace(/-/g,'');let str=this.value.trim();
+    if(/^\d{8}$/.test(raw))str=`${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`;
+    const mm=str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(mm){this.value=str;_dpSt[id]={y:+mm[1],mo:+mm[2]-1,mode:'day'};dpRender(id);cal.classList.add('open')}
+  });
   inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();const raw=this.value.replace(/-/g,'');if(/^\d{8}$/.test(raw))this.value=`${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`;cal.classList.remove('open')}else if(e.key==='Escape')cal.classList.remove('open')});
   document.addEventListener('click',function(e){if(!e.target.closest('#dpw-'+id))cal.classList.remove('open')},{capture:true});
 }
 function dpRender(id){
   const cal=document.getElementById('dpc-'+id);if(!cal)return;const st=_dpSt[id];if(!st)return;
   const inp=document.getElementById(id);const selV=inp?inp.value:'';const now=new Date();
-  if(st.mode==='year'){const base=Math.floor(st.y/12)*12;let h=`<div class="dp-nav"><button class="dp-nb" onclick="dpYShift('${id}',-12)">‹</button><span class="dp-hd">${base}–${base+11}</span><button class="dp-nb" onclick="dpYShift('${id}',12)">›</button></div><div class="dp-sg">`;for(let i=base;i<base+12;i++)h+=`<button class="dp-sb${i===st.y?' dp-on':''}" onclick="dpSelY('${id}',${i})">${i}</button>`;h+='</div>';cal.innerHTML=h;return}
-  if(st.mode==='month'){const ms=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];let h=`<div class="dp-nav"><button class="dp-nb" onclick="dpYShift('${id}',-1)">‹</button><span class="dp-hd" onclick="dpSetMode('${id}','year')">${st.y}년</span><button class="dp-nb" onclick="dpYShift('${id}',1)">›</button></div><div class="dp-sg">`;ms.forEach((mn,i)=>h+=`<button class="dp-sb${i===st.mo?' dp-on':''}" onclick="dpSelM('${id}',${i})">${mn}</button>`);h+='</div>';cal.innerHTML=h;return}
-  const first=new Date(st.y,st.mo,1).getDay();const days=new Date(st.y,st.mo+1,0).getDate();const mns=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  let h=`<div class="dp-nav"><button class="dp-nb" onclick="dpNavM('${id}',-1)">‹</button><span class="dp-hd" onclick="dpSetMode('${id}','month')">${st.y}년 ${mns[st.mo]}</span><button class="dp-nb" onclick="dpNavM('${id}',1)">›</button></div><div class="dp-grid"><div class="dp-dow">일</div><div class="dp-dow">월</div><div class="dp-dow">화</div><div class="dp-dow">수</div><div class="dp-dow">목</div><div class="dp-dow">금</div><div class="dp-dow">토</div>`;
+  if(st.mode==='year'){
+    const base=Math.floor(st.y/12)*12;let h=`<div class="dp-nav"><button class="dp-nb" onclick="dpYShift('${id}',-12)">‹</button><span class="dp-hd">${base}–${base+11}</span><button class="dp-nb" onclick="dpYShift('${id}',12)">›</button></div><div class="dp-sg">`;
+    for(let i=base;i<base+12;i++)h+=`<button class="dp-sb${i===st.y?' dp-on':''}" onclick="dpSelY('${id}',${i})">${i}</button>`;
+    h+='</div>';cal.innerHTML=h;return;
+  }
+  if(st.mode==='month'){
+    const ms=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+    let h=`<div class="dp-nav"><button class="dp-nb" onclick="dpYShift('${id}',-1)">‹</button><span class="dp-hd" onclick="dpSetMode('${id}','year')">${st.y}년</span><button class="dp-nb" onclick="dpYShift('${id}',1)">›</button></div><div class="dp-sg">`;
+    ms.forEach((mn,i)=>h+=`<button class="dp-sb${i===st.mo?' dp-on':''}" onclick="dpSelM('${id}',${i})">${mn}</button>`);
+    h+='</div>';cal.innerHTML=h;return;
+  }
+  const first=new Date(st.y,st.mo,1).getDay();const days=new Date(st.y,st.mo+1,0).getDate();
+  const mns=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  let h=`<div class="dp-nav"><button class="dp-nb" onclick="dpNavM('${id}',-1)">‹</button><span class="dp-hd" onclick="dpSetMode('${id}','month')">${st.y}년 ${mns[st.mo]}</span><button class="dp-nb" onclick="dpNavM('${id}',1)">›</button></div>
+  <div class="dp-grid"><div class="dp-dow">일</div><div class="dp-dow">월</div><div class="dp-dow">화</div><div class="dp-dow">수</div><div class="dp-dow">목</div><div class="dp-dow">금</div><div class="dp-dow">토</div>`;
   for(let i=0;i<first;i++)h+=`<div class="dp-day dp-empty"></div>`;
   for(let d=1;d<=days;d++){const ds=`${st.y}-${String(st.mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const isT=d===now.getDate()&&st.mo===now.getMonth()&&st.y===now.getFullYear();const isS=ds===selV;h+=`<div class="dp-day${isT?' dp-today':''}${isS?' dp-sel':''}" onclick="dpSelD('${id}','${ds}')">${d}</div>`}
   h+='</div>';cal.innerHTML=h;
@@ -400,7 +554,7 @@ function dpSelD(id,ds){const inp=document.getElementById(id);if(!inp)return;inp.
 function dpVal(id){const el=document.getElementById(id);return el?el.value.trim():''}
 function dpInitAll(ids){ids.forEach(id=>dpInit(id))}
 
-// ── 팝업/토스트 ──
+// ══════════════ POPUP / TOAST ══════════════
 function showPopup(icon,title,msg,afterFn){
   const div=document.createElement('div');div.className='popup-overlay';
   div.innerHTML=`<div class="popup-box"><div class="popup-icon">${icon}</div><div class="popup-title">${title}</div><div class="popup-msg">${msg}</div><button class="popup-btn" id="popup-ok-btn">확인</button></div>`;
@@ -410,54 +564,88 @@ function showPopup(icon,title,msg,afterFn){
 let _toastT;
 function toast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(type?' '+type:'');t.style.display='block';clearTimeout(_toastT);_toastT=setTimeout(()=>t.style.display='none',3000)}
 
-// ── 공통 헬퍼 ──
+// ══════════════ HELPERS ══════════════
 const AVC=[['#FEF3E2','#D4891A'],['#EDE9FE','#5B21B6'],['#DCFCE7','#166534'],['#DBEAFE','#1D4ED8'],['#FCE7F3','#9D174D'],['#FEF9C3','#854D0E'],['#F0FDF4','#14532D'],['#FFF7ED','#9A3412']];
 function avBg(n){return AVC[((n||'').charCodeAt(0)||0)%AVC.length][0]}
 function avFg(n){return AVC[((n||'').charCodeAt(0)||0)%AVC.length][1]}
 function empTypeBdg(t){const m={Regular:'bdg-r',Contract:'bdg-c',Intern:'bdg-i',Temp:'bdg-t'};return`<span class="bdg ${m[t]||'bdg-c'}">${t||'-'}</span>`}
 function stsBdg(s){const m={Emp:'bdg-e','Will resign':'bdg-wr',Resigned:'bdg-rs',Remote:'bdg-e','On Leave':'bdg-lv'};return`<span class="bdg ${m[s]||''}">${s||'-'}</span>`}
 function techBdg(t){if(!t)return'-';return`<span class="bdg ${t==='Tech'?'bdg-tech':'bdg-nt'}">${t}</span>`}
-function avHTML(e,size=26){const ph=PHDB();const id=e._id;if(ph[id])return`<div class="av" style="width:${size}px;height:${size}px"><img src="${ph[id]}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>`;return`<div class="av" style="width:${size}px;height:${size}px;background:${avBg(e.nameKr)};color:${avFg(e.nameKr)}">${(e.nameKr||'?')[0]}</div>`}
-function getActiveLeave(empId,ref){ref=ref||new Date();return(LVDB()[empId]||[]).find(lv=>{if(!lv.startDate)return false;const s=parseDate(lv.startDate);if(!s||!dateLE(s,ref))return false;if(lv.returnDate&&dateLE(parseDate(lv.returnDate),ref))return false;if(lv.endDate&&dateLT(parseDate(lv.endDate),ref))return false;return true})||null}
-function isActive(e,date){if(!e.joinDate)return false;const jd=parseDate(e.joinDate);if(!jd||!dateLE(jd,date))return false;if(e.resignDate&&dateLT(parseDate(e.resignDate),date))return false;if(e.status==='Resigned'&&!e.resignDate)return false;return true}
+function roleBdg(r){const m={master:'badge-master',admin:'badge-admin',viewer:'badge-viewer'};const l={master:'Master',admin:'Admin',viewer:'Viewer'};return`<span class="${m[r]||'badge-viewer'}">${l[r]||r}</span>`}
+function avHTML(e,size=26){
+  const ph=PHDB();const id=e._id;
+  if(ph[id])return`<div class="av" style="width:${size}px;height:${size}px"><img src="${ph[id]}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>`;
+  return`<div class="av" style="width:${size}px;height:${size}px;background:${avBg(e.nameKr)};color:${avFg(e.nameKr)}">${(e.nameKr||'?')[0]}</div>`;
+}
+function getActiveLeave(empId,ref){
+  ref=ref||new Date();
+  return(LVDB()[empId]||[]).find(lv=>{
+    if(!lv.startDate)return false;
+    const s=parseDate(lv.startDate);if(!s||!dateLE(s,ref))return false;
+    if(lv.returnDate&&dateLE(parseDate(lv.returnDate),ref))return false;
+    if(lv.endDate&&dateLT(parseDate(lv.endDate),ref))return false;
+    return true;
+  })||null;
+}
+function isActive(e,date){
+  if(!e.joinDate)return false;
+  const jd=parseDate(e.joinDate);if(!jd||!dateLE(jd,date))return false;
+  if(e.resignDate&&dateLT(parseDate(e.resignDate),date))return false;
+  if(e.status==='Resigned'&&!e.resignDate)return false;
+  return true;
+}
 function lookupEmployee(q,cb){
   q=(q||'').trim().toLowerCase();if(!q){toast('이름 또는 사번을 입력하세요.','err');return}
   const res=DB().filter(e=>(e.nameKr||'').toLowerCase()===q||(e.empId||'').toLowerCase()===q||(e.nameEn||'').toLowerCase().includes(q));
   if(!res.length){toast('해당 직원을 찾을 수 없습니다.','err');return}
   if(res.length===1){cb(res[0]);return}
   const body=document.getElementById('m-dup-b');
-  body.innerHTML=`<p style="font-size:12px;color:var(--g500);margin-bottom:10px">동명이인이 있습니다.</p>`+res.map(e=>`<div class="_dup-item" data-id="${e._id}" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--g200);border-radius:var(--r);margin-bottom:6px;cursor:pointer">${avHTML(e,30)}<div><div style="font-weight:700">${e.nameKr}</div><div style="font-size:11px;color:var(--g500)">${e.empId||''} · ${e.team||e.group||''}</div></div></div>`).join('');
-  body.querySelectorAll('._dup-item').forEach(el=>el.addEventListener('click',function(){const found=DB().find(x=>x._id===el.dataset.id);document.getElementById('m-dup').classList.remove('open');if(found)cb(found)}));
+  body.innerHTML=`<p style="font-size:12px;color:var(--g500);margin-bottom:10px">동명이인이 있습니다. 선택하세요.</p>`+
+    res.map(e=>`<div class="_dup-item" data-id="${e._id}" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--g200);border-radius:var(--r);margin-bottom:6px;cursor:pointer">
+      ${avHTML(e,30)}<div><div style="font-weight:700">${e.nameKr}</div><div style="font-size:11px;color:var(--g500)">${e.empId||''} · ${e.team||e.group||''}</div></div></div>`).join('');
+  body.querySelectorAll('._dup-item').forEach(el=>{el.addEventListener('click',function(){const found=DB().find(x=>x._id===el.dataset.id);document.getElementById('m-dup').classList.remove('open');if(found)cb(found)})});
   document.getElementById('m-dup').classList.add('open');
 }
 
-// ── AUTH ──
+// ══════════════ AUTH ══════════════
 async function initAuth(){
-  try{
-    const{data:{session}}=await supa.auth.getSession();
-    if(session){
-      await bootApp(session.user);
-    }else{
-      document.getElementById('auth').style.display='flex';
-    }
-  }catch(e){
-    console.error('initAuth error:',e);
-    document.getElementById('auth').style.display='flex';
+  document.getElementById('auth').style.display='flex';
+  const {data:{session}}=await supa.auth.getSession();
+  if(session){
+    document.getElementById('auth').style.display='none';
+    await onLogin(session.user);
   }
   supa.auth.onAuthStateChange(async(event,session)=>{
-    if(event==='SIGNED_IN'&&session){await bootApp(session.user)}
-    else if(event==='SIGNED_OUT'){document.getElementById('app').style.display='none';document.getElementById('auth').style.display='flex'}
+    if(event==='SIGNED_IN'&&session){
+      document.getElementById('auth').style.display='none';
+      await onLogin(session.user);
+    }else if(event==='SIGNED_OUT'){
+      document.getElementById('app').style.display='none';
+      document.getElementById('auth').style.display='flex';
+    }
   });
 }
-async function bootApp(user){
+
+async function onLogin(user){
   _currentUser=user;
+
+  // ✅ 권한 로드
+  _currentRole = await dbGetMyRole(user.id);
+  // admins 테이블에 아무도 없으면 첫 로그인 유저를 master로 자동 등록
+  const admins = await dbGetAllAdmins();
+  if(admins.length===0){
+    await dbUpsertAdminRole(user.id, user.email, 'master');
+    _currentRole='master';
+  }
+
   document.getElementById('auth').style.display='none';
   document.getElementById('app').style.display='block';
   const name=user.user_metadata?.full_name||user.email?.split('@')[0]||'사용자';
   document.getElementById('sb-un').textContent=name;
   document.getElementById('sb-ue').textContent=user.email||'';
   document.getElementById('sb-av').textContent=name[0].toUpperCase();
-  document.getElementById('sb-badge').innerHTML='<span class="badge-master">HR Admin</span>';
+  // ✅ 역할 뱃지 표시
+  document.getElementById('sb-badge').innerHTML=roleBdg(_currentRole);
   buildSidebar();
   document.getElementById('tb-dt').textContent=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'});
   NAV('dashboard');
@@ -479,28 +667,36 @@ document.getElementById('btn-login').addEventListener('click',async()=>{
 document.getElementById('l-pw').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btn-login').click()});
 document.getElementById('btn-logout').addEventListener('click',async()=>{await supa.auth.signOut()});
 
-// ── NAV ──
+// ══════════════ NAV ══════════════
 const PAGE_TITLES={dashboard:'대시보드',employees:'개인 인사기록 관리',resign:'퇴직 관리',assign:'발령 관리',leave:'휴복직 관리',eval:'평가결과 관리',discipline:'징계 관리',photos:'사진 관리',upload:'대량 업로드',download:'엑셀 다운로드',settings:'설정 / 권한관리'};
 function NAV(pg){
+  const required=MENU_ROLE[pg]||'viewer';
+  if(!hasRole(required)){toast(`이 메뉴는 ${required} 이상 권한이 필요합니다.`,'err');return}
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
   const el=document.querySelector(`.ni[data-pg="${pg}"]`);if(el)el.classList.add('active');
   document.getElementById('pt').textContent=PAGE_TITLES[pg]||pg;
   ({dashboard:renderDash,employees:renderEmps,resign:renderResign,assign:renderAssign,leave:renderLeave,eval:renderEval,discipline:renderDisc,photos:renderPhotos,upload:renderUpload,download:renderDlPage,settings:renderSettings})[pg]?.();
 }
 function buildSidebar(){
-  document.getElementById('sb-nav').innerHTML=ALL_MENUS.map(m=>`<div class="ni" data-pg="${m.id}"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="${m.icon}"/></svg>${m.label}</div>`).join('');
-  document.querySelectorAll('.ni[data-pg]').forEach(el=>el.addEventListener('click',()=>NAV(el.dataset.pg)));
+  document.getElementById('sb-nav').innerHTML=ALL_MENUS.map(m=>{
+    const required=MENU_ROLE[m.id]||'viewer';
+    const allowed=hasRole(required);
+    const lockIcon=!allowed?`<span class="lock">🔒</span>`:'';
+    return`<div class="ni${allowed?'':' locked'}" data-pg="${m.id}"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="${m.icon}"/></svg>${m.label}${lockIcon}</div>`;
+  }).join('');
+  document.querySelectorAll('.ni[data-pg]:not(.locked)').forEach(el=>el.addEventListener('click',()=>NAV(el.dataset.pg)));
 }
 function OM(id){document.getElementById(id).classList.add('open')}
 function CM(id){document.getElementById(id).classList.remove('open')}
 
-// 모달 닫기 바인딩
+// MODAL CLOSE BINDINGS
 (function(){
   [['m-detail-x','m-detail'],['m-detail-close','m-detail'],['m-edit-x','m-edit'],['m-edit-cancel','m-edit'],
    ['m-dl-x','m-dl'],['m-dl-cancel','m-dl'],['m-assign-x','m-assign'],['m-assign-cancel','m-assign'],
    ['m-eval-x','m-eval'],['m-eval-cancel','m-eval'],['m-photo-x','m-photo'],['m-photo-close','m-photo'],
    ['m-dup-x','m-dup'],['m-dup-cancel','m-dup'],['m-leave-x','m-leave'],['m-leave-cancel','m-leave'],
    ['m-disc-x','m-disc'],['m-disc-cancel','m-disc'],['m-note-x','m-note'],['m-note-cancel','m-note'],
+   ['m-master-x','m-master'],['m-master-cancel','m-master']
   ].forEach(([btn,modal])=>document.getElementById(btn)?.addEventListener('click',()=>CM(modal)));
   document.getElementById('m-edit-save').addEventListener('click',saveEmp);
   document.getElementById('m-assign-save').addEventListener('click',saveAssign);
@@ -514,7 +710,7 @@ function CM(id){document.getElementById(id).classList.remove('open')}
   document.querySelectorAll('.mb').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
 })();
 
-// ── 대시보드 ──
+// ══════════════ DASHBOARD ══════════════
 function renderDash(){
   const data=DB();const now=new Date();
   const oneMonthAgo=new Date(now.getFullYear(),now.getMonth()-1,now.getDate());
@@ -523,7 +719,8 @@ function renderDash(){
   const types=['Regular','Contract','Intern','Temp'];
   const totals={};types.forEach(t=>{totals[t]=active.filter(e=>e.empType===t).length});
   const regions=[...new Set(active.map(e=>e.region||'기타'))].sort();
-  const matrix={};regions.forEach(r=>{matrix[r]={};types.forEach(t=>{matrix[r][t]=0});matrix[r].total=0});
+  const matrix={};
+  regions.forEach(r=>{matrix[r]={};types.forEach(t=>{matrix[r][t]=0});matrix[r].total=0});
   active.forEach(e=>{const r=e.region||'기타';if(matrix[r]){if(types.includes(e.empType))matrix[r][e.empType]++;matrix[r].total++}});
   document.getElementById('cnt').innerHTML=`
   <div class="sg">
@@ -540,7 +737,7 @@ function renderDash(){
    </div>
    <div class="card"><div class="card-h"><span class="card-t">최근 1개월 입사자</span></div>
     <div class="tw"><table><thead><tr><th>이름</th><th>그룹</th><th>고용형태</th><th>입사일</th></tr></thead>
-    <tbody>${recent.map(e=>`<tr><td><div class="td-nm">${avHTML(e,22)}<div class="nm">${e.nameKr}</div></div></td><td>${e.group||'-'}</td><td>${empTypeBdg(e.empType)}</td><td>${e.joinDate||'-'}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">없음</td></tr>'}</tbody></table></div>
+    <tbody>${recent.map(e=>`<tr><td><div class="td-nm">${avHTML(e,22)}<div><div class="nm">${e.nameKr}</div></div></div></td><td>${e.group||'-'}</td><td>${empTypeBdg(e.empType)}</td><td>${e.joinDate||'-'}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">없음</td></tr>'}</tbody></table></div>
    </div>
   </div>
   <div class="card"><div class="card-h"><span class="card-t">최근 1년 월말 인원 추이</span></div>
@@ -559,11 +756,12 @@ function renderTrendChart(data){
   dlChart=new Chart(canvas,{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10},padding:10}}},scales:{y:{beginAtZero:false,ticks:{precision:0,font:{size:10}}},x:{ticks:{font:{size:10}}}}}});
 }
 
-// ── 직원 목록 ──
+// ══════════════ EMPLOYEES ══════════════
 function renderEmps(){
   const data=DB();
   const groups=[...new Set(data.map(e=>e.group).filter(Boolean))].sort();
   const types=[...new Set(data.map(e=>e.empType).filter(Boolean))].sort();
+  const canEdit=hasRole('admin');
   document.getElementById('cnt').innerHTML=`
   <div class="toolbar">
    <div class="sw-wrap"><svg class="sw-icon" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.3"/><path d="M10.5 10.5l3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
@@ -573,7 +771,7 @@ function renderEmps(){
    <select class="fsel" id="fs-sel"><option value="">전체 상태</option><option value="Emp">Emp</option><option value="Remote">Remote</option><option value="Will resign">Will resign</option><option value="Resigned">Resigned</option></select>
    <div style="margin-left:auto;display:flex;gap:6px">
     <button class="btn btn-s" id="btn-dl-modal">📥 엑셀</button>
-    <button class="btn btn-p" id="btn-add-emp">+ 직원 추가</button>
+    ${canEdit?`<button class="btn btn-p" id="btn-add-emp">+ 직원 추가</button>`:''}
    </div>
   </div>
   <div class="card"><div id="emp-tbl"></div><div style="padding:0 14px 12px" id="emp-pg"></div></div>`;
@@ -582,7 +780,7 @@ function renderEmps(){
   document.getElementById('ft-sel').addEventListener('change',e=>{empFT=e.target.value;empPage=1;renderEmpTbl()});
   document.getElementById('fs-sel').addEventListener('change',e=>{empFS=e.target.value;empPage=1;renderEmpTbl()});
   document.getElementById('btn-dl-modal').addEventListener('click',()=>{document.getElementById('m-dl-b').innerHTML=buildColSelector();bindColSel();OM('m-dl')});
-  document.getElementById('btn-add-emp').addEventListener('click',openAddEmp);
+  if(canEdit) document.getElementById('btn-add-emp')?.addEventListener('click',()=>openAddEmp());
   renderEmpTbl();
 }
 function renderEmpTbl(){
@@ -590,7 +788,9 @@ function renderEmpTbl(){
   let f=DB().filter(e=>{
     const q=empQ.toLowerCase();
     if(q&&![(e.nameKr||''),(e.nameEn||''),(e.empId||''),(e.email||'')].some(x=>x.toLowerCase().includes(q)))return false;
-    if(empFG&&e.group!==empFG)return false;if(empFT&&e.empType!==empFT)return false;if(empFS&&e.status!==empFS)return false;
+    if(empFG&&e.group!==empFG)return false;
+    if(empFT&&e.empType!==empFT)return false;
+    if(empFS&&e.status!==empFS)return false;
     return true;
   });
   const total=f.length,pages=Math.ceil(total/PER)||1;
@@ -607,14 +807,16 @@ function renderEmpTbl(){
      <td><span class="bdg bdg-mg">${e.empId||'-'}</span></td>
      <td><div class="td-nm">${avHTML(e,26)}<div><div class="nm">${e.nameKr||'-'}${extra}</div><div class="nm-en">${e.nameEn||''}</div></div></div></td>
      <td style="font-size:11px">${e.group||'-'}</td><td style="font-size:11px">${e.team||'-'}</td>
-     <td style="font-size:11px">${e.jobTitle||'-'}</td><td>${empTypeBdg(e.empType)}</td><td>${stsBdg(e.status)}</td>
-     <td>${techBdg(e.techFlag)}</td><td style="font-size:11px;color:var(--g500)">${e.joinDate||'-'}</td>
+     <td style="font-size:11px">${e.jobTitle||'-'}</td>
+     <td>${empTypeBdg(e.empType)}</td><td>${stsBdg(e.status)}</td>
+     <td>${techBdg(e.techFlag)}</td>
+     <td style="font-size:11px;color:var(--g500)">${e.joinDate||'-'}</td>
      <td style="font-size:11px;color:var(--red)">${e.resignDate||''}</td>
     </tr>`;
   }).join('');
   const tblEl=document.getElementById('emp-tbl');
   tblEl.innerHTML=`<div class="tw"><table><thead><tr><th>EMP ID</th><th>이름</th><th>Group</th><th>Team</th><th>Job Title</th><th>고용형태</th><th>상태</th><th>Tech</th><th>입사일</th><th>퇴직일</th></tr></thead><tbody>${rows||'<tr><td colspan="10" class="empty">데이터 없음</td></tr>'}</tbody></table></div>`;
-  tblEl.querySelectorAll('._emp-row').forEach(row=>row.addEventListener('click',function(){openDetailModal(this.dataset.id)}));
+  tblEl.querySelectorAll('._emp-row').forEach(row=>row.addEventListener('click',()=>openDetailModal(row.dataset.id)));
   let pg=`<div class="pg"><span class="pg-inf">총 ${total}명</span><div class="pg-bs"><div class="pg-b" id="pg-prev">‹</div>`;
   for(let i=1;i<=Math.min(pages,7);i++)pg+=`<div class="pg-b${i===empPage?' on':''}" data-p="${i}">${i}</div>`;
   if(pages>7)pg+=`<span style="padding:0 4px">…</span><div class="pg-b${pages===empPage?' on':''}" data-p="${pages}">${pages}</div>`;
@@ -625,25 +827,32 @@ function renderEmpTbl(){
   pgEl.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{empPage=+b.dataset.p;renderEmpTbl()}));
 }
 
-// ── 직원 상세 ──
 async function openDetailModal(id){
   const e=DB().find(x=>x._id===id);if(!e)return;
   curEditId=id;
+  const canEdit=hasRole('admin');
   const now=new Date();const lv=getActiveLeave(id,now);
   const isResigned=e.status==='Resigned'||!!e.resignDate;
   const ph=PHDB();
   let flagEl=isResigned?'<div class="resign-flag">퇴직</div>':lv?'<div class="leave-flag">휴직 중</div>':'';
-  let photoEl=ph[id]?`<div class="ed-photo-wrap"><img src="${ph[id]}" style="width:90px;height:112px;object-fit:cover;border-radius:var(--r);border:2px solid var(--mg-m)">${flagEl}</div>`:`<div class="ed-photo-wrap"><div class="ed-photo-def"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span style="font-size:10px;color:var(--g400)">사진 없음</span></div>${flagEl}</div>`;
+  let photoEl=ph[id]
+    ?`<div class="ed-photo-wrap"><img src="${ph[id]}" style="width:90px;height:112px;object-fit:cover;border-radius:var(--r);border:2px solid var(--mg-m)">${flagEl}</div>`
+    :`<div class="ed-photo-wrap"><div class="ed-photo-def"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span style="font-size:10px;color:var(--g400)">사진 없음</span></div>${flagEl}</div>`;
   const age=calcAge(e.birthDate);
-  const ee=EVDB()[id]||[];const ea=ADB()[id]||[];const discs=DCDB()[id]||[];
+  const ee=EVDB()[id]||[];
+  const ea=ADB()[id]||[];
+  const discs=DCDB()[id]||[];
   const noteContent=await dbGetNote(id);
   const leaveHtml=lv?`<div class="leave-info-box">🏖️ 휴직 중 (${lv.leaveType||'휴직'}) · ${lv.startDate} ~ ${lv.endDate||'미정'}</div>`:'';
   const resignHtml=isResigned?`<div class="resign-info-box">🔴 퇴직 · ${e.resignDate||'-'} · ${e.resignReason1||e.terminationType||'-'}</div>`:'';
   const years=[...new Set(ee.map(x=>x.year))].sort().reverse();
   const evalRows=years.map(yr=>{const pv=ee.find(x=>x.year===yr&&x.type==='performance');const cv=ee.find(x=>x.year===yr&&x.type==='corevalue');const fg=ee.find(x=>x.year===yr&&x.type==='final');return`<tr><td style="font-weight:700;text-align:center">${yr}</td><td style="text-align:center">${pv?`<span class="bdg bdg-mg">${pv.grade}</span>`:'-'}</td><td style="text-align:center">${cv?`<span class="bdg bdg-mg">${cv.grade}</span>`:'-'}</td><td style="text-align:center">${fg?`<span class="bdg" style="background:var(--mg);color:#fff">${fg.grade}</span>`:'-'}</td></tr>`}).join('');
-  const assignRows=[...ea].sort((a,b)=>(b.assignDate||'').localeCompare(a.assignDate||'')).map(a=>`<tr><td>${a.assignDate}</td><td style="font-weight:600">${a.assignName||''}</td><td style="font-size:10px">${a.fromGroup||'-'}/${a.fromTeam||'-'}</td><td style="font-size:10px">${a.toGroup||'-'}/${a.toTeam||'-'}</td></tr>`).join('');
-  const discRows=discs.map(d=>`<tr><td style="font-size:11px">${d.date||'-'}</td><td><span class="bdg bdg-disc">${d.type||'-'}</span></td><td style="font-size:11px">${d.content||'-'}</td></tr>`).join('');
+  const assignRows=[...ea].sort((a,b)=>(b.assignDate||'').localeCompare(a.assignDate||'')).map(a=>`<tr><td>${a.assignDate}</td><td style="font-weight:600">${a.assignName||''}</td><td style="font-size:10px">${a.fromClevel||'-'}/${a.fromGroup||'-'}/${a.fromTeam||'-'}</td><td style="font-size:10px">${a.toClevel||'-'}/${a.toGroup||'-'}/${a.toTeam||'-'}</td><td style="font-size:10px">${a.fromJobTitle||'-'}→${a.toJobTitle||'-'}</td></tr>`).join('');
+  const discRows=discs.map(d=>`<tr><td style="font-size:11px">${d.date||'-'}</td><td><span class="bdg bdg-disc">${d.type||'-'}</span></td><td style="font-size:11px">${d.content||'-'}</td><td style="font-size:11px">${d.note||''}</td></tr>`).join('');
   document.getElementById('m-detail-t').textContent=`${e.nameKr||''} (${e.empId||''})`;
+  // viewer는 수정/삭제 버튼 숨김
+  document.getElementById('m-detail-edit').style.display=canEdit?'':'none';
+  document.getElementById('m-detail-del').style.display=canEdit?'':'none';
   document.getElementById('m-detail-b').innerHTML=`
   <div class="ed-wrap">
    ${resignHtml}
@@ -675,19 +884,19 @@ async function openDetailModal(id){
      <tbody>${evalRows||'<tr><td colspan="4" class="empty">없음</td></tr>'}</tbody></table></div>
     </div>
     <div class="card"><div class="card-h"><span class="card-t" style="font-size:11px">📋 발령 이력</span></div>
-     <div class="tw"><table class="ed-table"><thead><tr><th>발령일</th><th>발령명</th><th>이전(G/T)</th><th>이후(G/T)</th></tr></thead>
-     <tbody>${assignRows||'<tr><td colspan="4" class="empty">없음</td></tr>'}</tbody></table></div>
+     <div class="tw"><table class="ed-table"><thead><tr><th>발령일</th><th>발령명</th><th>이전(C/G/T)</th><th>이후(C/G/T)</th><th>JT변경</th></tr></thead>
+     <tbody>${assignRows||'<tr><td colspan="5" class="empty">없음</td></tr>'}</tbody></table></div>
     </div>
    </div>
    <div class="ed-mid">
     <div class="card"><div class="card-h"><span class="card-t" style="font-size:11px">⚖️ 징계사항</span></div>
-     <div class="tw"><table class="ed-table"><thead><tr><th>일자</th><th>종류</th><th>내용</th></tr></thead>
-     <tbody>${discRows||'<tr><td colspan="3" class="empty">없음</td></tr>'}</tbody></table></div>
+     <div class="tw"><table class="ed-table"><thead><tr><th>일자</th><th>종류</th><th>내용</th><th>비고</th></tr></thead>
+     <tbody>${discRows||'<tr><td colspan="4" class="empty">없음</td></tr>'}</tbody></table></div>
     </div>
     <div class="card"><div class="card-h"><span class="card-t" style="font-size:11px">📝 특이사항</span></div>
      <div style="padding:12px 14px">
       <div style="font-size:12px;white-space:pre-wrap;color:var(--g800);min-height:36px;background:var(--g50);padding:8px;border-radius:var(--r)">${noteContent||'(없음)'}</div>
-      <button class="btn btn-s btn-xs _note-btn" data-id="${id}" style="margin-top:7px">✏️ 수정</button>
+      ${canEdit?`<button class="btn btn-s btn-xs _note-btn" data-id="${id}" style="margin-top:7px">✏️ 수정</button>`:''}
      </div>
     </div>
    </div>
@@ -695,17 +904,18 @@ async function openDetailModal(id){
   document.getElementById('m-detail-edit').onclick=()=>{CM('m-detail');openEditModal(id)};
   document.getElementById('m-detail-del').onclick=async()=>{
     if(!confirm(`${e.nameKr} 데이터를 삭제할까요?`))return;
-    try{await dbDeleteEmployee(id);await loadAllData();CM('m-detail');renderEmps();toast('삭제 완료','ok')}
-    catch(err){toast('삭제 실패','err')}
+    await dbDeleteEmployee(id);await loadAllData();CM('m-detail');renderEmps();toast('삭제 완료','ok');
   };
-  document.querySelector('._note-btn').addEventListener('click',function(){openNoteModal(this.dataset.id)});
+  document.querySelector('._note-btn')?.addEventListener('click',function(){openNoteModal(this.dataset.id)});
   OM('m-detail');
 }
 
-// ── 직원 추가/수정 ──
-function openAddEmp(){curEditId=null;document.getElementById('m-edit-t').textContent='직원 추가';buildEmpForm({});OM('m-edit')}
-function openEditModal(id){curEditId=id;const e=DB().find(x=>x._id===id)||{};document.getElementById('m-edit-t').textContent=`수정 — ${e.nameKr||''}`;buildEmpForm(e);OM('m-edit')}
-function dfld(k,l,opts=[],val=''){if(opts.length)return`<div class="fgrp"><label class="flbl">${l}</label><select class="fsel2" id="ef-${k}"><option value="">선택</option>${opts.map(o=>`<option value="${o}"${val===o?' selected':''}>${o}</option>`).join('')}</select></div>`;return`<div class="fgrp"><label class="flbl">${l}${k==='nameKr'?'<span class="req">*</span>':''}</label><input class="finp" id="ef-${k}" value="${(val||'').replace(/"/g,'&quot;')}"></div>`}
+function openAddEmp(){requireRole('admin',()=>{curEditId=null;document.getElementById('m-edit-t').textContent='직원 추가';buildEmpForm({});OM('m-edit')})}
+function openEditModal(id){requireRole('admin',()=>{curEditId=id;const e=DB().find(x=>x._id===id)||{};document.getElementById('m-edit-t').textContent=`수정 — ${e.nameKr||''}`;buildEmpForm(e);OM('m-edit')})}
+function dfld(k,l,opts=[],val=''){
+  if(opts.length)return`<div class="fgrp"><label class="flbl">${l}</label><select class="fsel2" id="ef-${k}"><option value="">선택</option>${opts.map(o=>`<option value="${o}"${val===o?' selected':''}>${o}</option>`).join('')}</select></div>`;
+  return`<div class="fgrp"><label class="flbl">${l}${k==='nameKr'?'<span class="req">*</span>':''}</label><input class="finp" id="ef-${k}" value="${(val||'').replace(/"/g,'&quot;')}"></div>`;
+}
 function ddp(k,l,val=''){return`<div class="fgrp"><label class="flbl">${l}</label>${dpHTML('ef-'+k,val)}</div>`}
 function buildEmpForm(e){
   const f=(k,l,opts=[])=>dfld(k,l,opts,e[k]||'');const fd=(k,l)=>ddp(k,l,e[k]||'');
@@ -736,15 +946,15 @@ function buildEmpForm(e){
 }
 function getV(k){const el=document.getElementById('ef-'+k);return el?el.value.trim():''}
 async function saveEmp(){
-  const nameKr=getV('nameKr');if(!nameKr){toast('한글명을 입력하세요.','err');return}
-  const keys=['nameKr','nameEn','empId','region','gender','birthDate','phone','email','address','clevel','group','team','concurrentOrg','jobGroup','jobTitle','jobPosition','techFlag','empType','workingHours','status','workLocation','joinDate','contractJoinDate','tenure','regularDate','contract','healthCheck','specialFlag','visaType','visaEnd','contractEnd','hireRoute','hireChannel','hiringBonus','prevCareer','careerYears','careerRange','education','school','major','undergrad','terminationType','resignDate'];
-  const obj={};keys.forEach(k=>{const v=getV(k);if(v)obj[k]=v});
-  if(obj.birthDate){const a=calcAge(obj.birthDate);if(a){obj.age=a;const y=+a;obj.ageGroup=y<30?'30대미만':y<40?'30~39세':y<50?'40~49세':y<60?'50~59세':'60세이상'}}
-  if(curEditId)obj._id=curEditId;
-  btnLoading('m-edit-save',true);
-  try{await dbUpsertEmployee(obj);await loadAllData();CM('m-edit');renderEmps();toast(curEditId?'수정 완료':'직원 추가 완료','ok')}
-  catch(e){toast('저장 실패: '+e.message,'err')}
-  finally{btnLoading('m-edit-save',false)}
+  requireRole('admin',async()=>{
+    const nameKr=getV('nameKr');if(!nameKr){toast('한글명을 입력하세요.','err');return}
+    const keys=['nameKr','nameEn','empId','region','gender','birthDate','phone','email','address','clevel','group','team','concurrentOrg','jobGroup','jobTitle','jobPosition','techFlag','empType','workingHours','status','workLocation','joinDate','contractJoinDate','tenure','regularDate','contract','healthCheck','specialFlag','visaType','visaEnd','contractEnd','hireRoute','hireChannel','hiringBonus','prevCareer','careerYears','careerRange','education','school','major','undergrad','terminationType','resignDate'];
+    const obj={};keys.forEach(k=>{const v=getV(k);if(v)obj[k]=v});
+    if(obj.birthDate){const a=calcAge(obj.birthDate);if(a){obj.age=a;const y=+a;obj.ageGroup=y<30?'30대미만':y<40?'30~39세':y<50?'40~49세':y<60?'50~59세':'60세이상'}}
+    if(curEditId)obj._id=curEditId;
+    try{await dbUpsertEmployee(obj);await loadAllData();CM('m-edit');renderEmps();toast(curEditId?'수정 완료':'직원 추가 완료','ok')}
+    catch(e){toast('저장 실패: '+e.message,'err')}
+  });
 }
 async function openNoteModal(empId){
   curNoteEmpId=empId;const e=DB().find(x=>x._id===empId)||{};
@@ -754,13 +964,12 @@ async function openNoteModal(empId){
   OM('m-note');
 }
 async function saveNote(){
-  btnLoading('m-note-save',true);
-  try{await dbUpsertNote(curNoteEmpId,document.getElementById('note-content').value);await loadAllData();CM('m-note');openDetailModal(curNoteEmpId);toast('저장 완료','ok')}
-  catch(e){toast('저장 실패: '+e.message,'err')}
-  finally{btnLoading('m-note-save',false)}
+  const c=document.getElementById('note-content').value;
+  try{await dbUpsertNote(curNoteEmpId,c);await loadAllData();CM('m-note');openDetailModal(curNoteEmpId);toast('저장 완료','ok')}
+  catch(e){toast('저장 실패','err')}
 }
 
-// ── 퇴직 ──
+// ══════════════ RESIGN ══════════════
 window._resignEmpId=null;
 function renderResign(){
   const list=DB().filter(e=>e.resignDate||e.status==='Resigned').sort((a,b)=>(b.resignDate||'').localeCompare(a.resignDate||'')).slice(0,20);
@@ -768,7 +977,10 @@ function renderResign(){
   <div style="max-width:720px">
    <div class="card" style="margin-bottom:14px"><div class="card-h"><span class="card-t">퇴직 처리</span></div>
     <div class="card-b">
-     <div style="display:flex;gap:8px;margin-bottom:8px"><input class="finp" id="resign-q" placeholder="사번 또는 성명..."><button class="btn btn-p" id="btn-resign-search">검색</button></div>
+     <div style="display:flex;gap:8px;margin-bottom:8px">
+      <input class="finp" id="resign-q" placeholder="사번 또는 성명...">
+      <button class="btn btn-p" id="btn-resign-search">검색</button>
+     </div>
      <div id="resign-result"></div>
     </div>
    </div>
@@ -797,35 +1009,698 @@ function showResignForm(emp){
     <div class="fgrp"><label class="flbl">퇴직 구분</label>
      <select class="fsel2" id="ri-type"><option>자발적 퇴직</option><option>계약 만료</option><option>권고 사직</option><option>해고</option><option>사망</option><option>기타</option></select>
     </div>
-    <div class="fgrp" style="grid-column:1/-1"><label class="flbl">사유</label><input class="finp" id="ri-reason" placeholder="퇴직 사유" value="${emp.resignReason1||''}"></div>
+    <div class="fgrp" style="grid-column:1/-1"><label class="flbl">사유</label>
+     <input class="finp" id="ri-reason" placeholder="퇴직 사유" value="${emp.resignReason1||''}">
+    </div>
    </div>
    <div style="text-align:right"><button class="btn btn-d" id="btn-do-resign">퇴직 처리</button></div>
   </div>`;
   dpInit('ri-date');
   document.getElementById('btn-do-resign').addEventListener('click',async function(){
     const dateVal=document.getElementById('ri-date').value.trim();
+    const typeVal=document.getElementById('ri-type').value;
+    const reasonVal=document.getElementById('ri-reason').value.trim();
     if(!dateVal){toast('퇴직일을 입력하세요.','err');return}
-    const empId=window._resignEmpId;
-    const empData=DB().find(x=>x._id===empId);if(!empData){toast('직원 데이터를 찾을 수 없습니다.','err');return}
-    this.textContent='처리 중...';this.disabled=true;
-    try{
-      const updated={...empData,resignDate:dateVal,status:'Resigned',terminationType:document.getElementById('ri-type').value,resignReason1:document.getElementById('ri-reason').value.trim()};
-      await dbUpsertEmployee(updated);await loadAllData();window._resignEmpId=null;renderResign();
-      showPopup('✅','퇴직 처리 완료',`${empData.nameKr} 님 퇴직 처리 완료<br>퇴직일: ${dateVal}`,null);
-    }catch(e){toast('처리 실패: '+e.message,'err');this.textContent='퇴직 처리';this.disabled=false}
+    const empData=DB().find(x=>x._id===window._resignEmpId);if(!empData)return;
+    const updated={...empData,resignDate:dateVal,status:'Resigned',terminationType:typeVal,resignReason1:reasonVal};
+    try{await dbUpsertEmployee(updated);await loadAllData();window._resignEmpId=null;renderResign();showPopup('✅','퇴직 처리 완료',`${empData.nameKr} 님 퇴직 처리 완료<br>퇴직일: ${dateVal}`,null)}
+    catch(e){toast('처리 실패: '+e.message,'err')}
   });
 }
 
-// ── 발령 ──
+// ══════════════ ASSIGN ══════════════
 function renderAssign(){
-  const assigns=ADB();const data=DB();const allA=[];
+  const assigns=ADB();const data=DB();
+  const allA=[];
   Object.entries(assigns).forEach(([eid,arr])=>{const emp=data.find(x=>x._id===eid);if(!emp)return;arr.forEach(a=>allA.push({...a,emp}))});
   allA.sort((a,b)=>(b.assignDate||'').localeCompare(a.assignDate||''));
   const rows=allA.slice(0,20).map(a=>`<tr><td>${a.assignDate}</td><td><div class="td-nm">${avHTML(a.emp,22)}<span style="margin-left:6px;font-weight:600">${a.emp.nameKr}</span></div></td><td style="font-size:11px">${a.emp.empId||'-'}</td><td style="font-weight:600">${a.assignName||''}</td><td style="font-size:10px">${a.fromGroup||'-'}/${a.fromTeam||'-'}</td><td style="font-size:10px">${a.toGroup||'-'}/${a.toTeam||'-'}</td></tr>`).join('');
   document.getElementById('cnt').innerHTML=`
   <div style="display:flex;flex-direction:column;gap:14px">
    <div class="card"><div class="card-h"><span class="card-t">발령 조회 / 등록</span></div>
-    <div class="card-b"><div style="display:flex;gap:8px"><input class="finp" id="assign-q" placeholder="사번 또는 성명..."><button class="btn btn-p" id="btn-assign-search">조회</button></div><div id="assign-emp-result"></div></div>
+    <div class="card-b">
+     <div style="display:flex;gap:8px"><input class="finp" id="assign-q" placeholder="사번 또는 성명..."><button class="btn btn-p" id="btn-assign-search">조회</button></div>
+     <div id="assign-emp-result"></div>
+    </div>
    </div>
    <div class="card"><div class="card-h"><span class="card-t">최근 발령 내역</span></div>
-    <div class="tw"><table><thead><tr><th>발령일
+    <div class="tw"><table><thead><tr><th>발령일</th><th>이름</th><th>사번</th><th>발령명</th><th>이전(G/T)</th><th>이후(G/T)</th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="6" class="empty">없음</td></tr>'}</tbody></table></div>
+   </div>
+  </div>`;
+  const doS=()=>lookupEmployee(document.getElementById('assign-q').value.trim(),e=>showAssignForm(e));
+  document.getElementById('btn-assign-search').addEventListener('click',doS);
+  document.getElementById('assign-q').addEventListener('keydown',e=>{if(e.key==='Enter')doS()});
+}
+function showAssignForm(e){
+  curAssignEmpId=e._id;
+  const ea=(ADB()[e._id]||[]).sort((a,b)=>(b.assignDate||'').localeCompare(a.assignDate||''));
+  const rows=ea.map((a,i)=>`<tr><td>${a.assignDate}</td><td style="font-weight:600">${a.assignName||''}</td><td style="font-size:10px">${a.fromGroup||'-'}/${a.fromTeam||'-'}</td><td style="font-size:10px">${a.toGroup||'-'}/${a.toTeam||'-'}</td><td style="font-size:10px">${a.fromJobTitle||'-'}→${a.toJobTitle||'-'}</td><td><button class="btn btn-d btn-xs _del-assign" data-empid="${e._id}" data-idx="${i}">삭제</button></td></tr>`).join('');
+  const res=document.getElementById('assign-emp-result');
+  res.innerHTML=`<div style="margin-top:12px">
+   <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--g100);margin-bottom:12px">
+    ${avHTML(e,32)}<div><div style="font-size:13px;font-weight:700">${e.nameKr}</div><div style="font-size:11px;color:var(--g500)">${e.empId||''} · ${e.group||''} · ${e.team||''}</div></div>
+    <button class="btn btn-p btn-sm" id="btn-add-assign" style="margin-left:auto">+ 발령 추가</button>
+   </div>
+   <div class="tw"><table><thead><tr><th>발령일</th><th>발령명</th><th>이전(G/T)</th><th>이후(G/T)</th><th>JT변경</th><th></th></tr></thead>
+   <tbody>${rows||'<tr><td colspan="6" class="empty">없음</td></tr>'}</tbody></table></div>
+  </div>`;
+  document.getElementById('btn-add-assign').addEventListener('click',()=>openAddAssign(e._id));
+  res.querySelectorAll('._del-assign').forEach(btn=>btn.addEventListener('click',async function(){
+    try{await dbDeleteAssignment(this.dataset.empid,+this.dataset.idx);await loadAllData();showAssignForm(DB().find(x=>x._id===this.dataset.empid)||e);toast('삭제 완료','ok')}
+    catch(err){toast('삭제 실패','err')}
+  }));
+}
+function openAddAssign(empId){
+  curAssignEmpId=empId;const e=DB().find(x=>x._id===empId)||{};
+  document.getElementById('m-assign-t').textContent=`발령 등록 — ${e.nameKr||''}`;
+  document.getElementById('m-assign-b').innerHTML=`
+  <div class="fg">
+   <div class="fgrp"><label class="flbl">발령일 <span class="req">*</span></label>${dpHTML('as-date')}</div>
+   <div class="fgrp"><label class="flbl">발령명</label>
+    <select class="fsel2" id="as-type"><option value="">선택...</option><option>발령 (부서이동)</option><option>직급 변경</option><option>직책승진</option><option>휴직</option><option>복직</option><option>겸직</option><option>해외파견</option><option>복귀</option><option>기타</option></select>
+   </div>
+   <div class="fgrp ff"><label class="flbl">발령명 직접입력 <span class="req">*</span></label><input class="finp" id="as-name"></div>
+   <div class="fsec">이전 소속</div>
+   <div class="fgrp"><label class="flbl">이전 C-Level</label><input class="finp" id="as-fromclevel" value="${e.clevel||''}"></div>
+   <div class="fgrp"><label class="flbl">이전 Group</label><input class="finp" id="as-fromgroup" value="${e.group||''}"></div>
+   <div class="fgrp"><label class="flbl">이전 Team</label><input class="finp" id="as-fromteam" value="${e.team||''}"></div>
+   <div class="fgrp"><label class="flbl">이전 겸직부서</label><input class="finp" id="as-fromconc" value="${e.concurrentOrg||''}"></div>
+   <div class="fgrp"><label class="flbl">이전 Job Title</label><input class="finp" id="as-fromjobtitle" value="${e.jobTitle||''}"></div>
+   <div class="fgrp"><label class="flbl">이전 직책</label><input class="finp" id="as-fromtitle"></div>
+   <div class="fsec">이후 소속 (개인기록 자동 반영)</div>
+   <div class="fgrp"><label class="flbl">이후 C-Level</label><input class="finp" id="as-toclevel"></div>
+   <div class="fgrp"><label class="flbl">이후 Group</label><input class="finp" id="as-togroup"></div>
+   <div class="fgrp"><label class="flbl">이후 Team</label><input class="finp" id="as-toteam"></div>
+   <div class="fgrp"><label class="flbl">이후 겸직부서</label><input class="finp" id="as-toconc"></div>
+   <div class="fgrp"><label class="flbl">이후 Job Title</label><input class="finp" id="as-tojobtitle"></div>
+   <div class="fgrp"><label class="flbl">이후 직책</label><input class="finp" id="as-totitle"></div>
+   <div class="fgrp ff"><label class="flbl">비고</label><textarea class="ftxt" id="as-note" rows="2"></textarea></div>
+  </div>`;
+  document.getElementById('as-type').addEventListener('change',function(){document.getElementById('as-name').value=this.value});
+  dpInit('as-date');OM('m-assign');
+}
+async function saveAssign(){
+  const date=document.getElementById('as-date').value.trim();
+  const name=document.getElementById('as-name').value.trim()||document.getElementById('as-type').value;
+  if(!date||!name){toast('발령일과 발령명을 입력하세요.','err');return}
+  const obj={assignDate:date,assignName:name,fromClevel:document.getElementById('as-fromclevel').value,fromGroup:document.getElementById('as-fromgroup').value,fromTeam:document.getElementById('as-fromteam').value,fromConc:document.getElementById('as-fromconc').value,fromJobTitle:document.getElementById('as-fromjobtitle').value,fromTitle:document.getElementById('as-fromtitle').value,toClevel:document.getElementById('as-toclevel').value,toGroup:document.getElementById('as-togroup').value,toTeam:document.getElementById('as-toteam').value,toConc:document.getElementById('as-toconc').value,toJobTitle:document.getElementById('as-tojobtitle').value,toTitle:document.getElementById('as-totitle').value,note:document.getElementById('as-note').value};
+  try{
+    await dbAddAssignment(curAssignEmpId,obj);
+    const emp=DB().find(x=>x._id===curAssignEmpId);
+    if(emp){const updated={...emp};if(obj.toClevel)updated.clevel=obj.toClevel;if(obj.toGroup)updated.group=obj.toGroup;if(obj.toTeam)updated.team=obj.toTeam;if(obj.toConc)updated.concurrentOrg=obj.toConc;if(obj.toJobTitle)updated.jobTitle=obj.toJobTitle;await dbUpsertEmployee(updated)}
+    await loadAllData();CM('m-assign');
+    const e=DB().find(x=>x._id===curAssignEmpId);if(e)showAssignForm(e);
+    showPopup('📋','발령 등록 완료','발령 등록 및 개인기록 자동 반영 완료',null);
+  }catch(e){toast('저장 실패: '+e.message,'err')}
+}
+
+// ══════════════ LEAVE ══════════════
+function renderLeave(){
+  const data=DB();const lvdb=LVDB();const now=new Date();
+  const allL=[];Object.entries(lvdb).forEach(([eid,arr])=>{const emp=data.find(x=>x._id===eid);if(!emp)return;arr.forEach(l=>allL.push({...l,emp}))});
+  allL.sort((a,b)=>(b.startDate||'').localeCompare(a.startDate||''));
+  const rows=allL.slice(0,30).map(l=>{const isA=getActiveLeave(l.emp._id,now)?.startDate===l.startDate;return`<tr><td><div class="td-nm">${avHTML(l.emp,22)}<span style="margin-left:6px;font-weight:600">${l.emp.nameKr}</span></div></td><td style="font-size:11px">${l.emp.empId||'-'}</td><td><span class="bdg bdg-lv">${l.leaveType||'-'}</span></td><td style="font-size:11px">${l.startDate||'-'}</td><td style="font-size:11px">${l.endDate||'미정'}</td><td style="font-size:11px">${l.returnDate||'-'}</td><td>${isA?'<span class="bdg bdg-lv">휴직 중</span>':'<span class="bdg bdg-r">복직</span>'}</td></tr>`}).join('');
+  document.getElementById('cnt').innerHTML=`
+  <div style="display:flex;flex-direction:column;gap:14px">
+   <div class="card"><div class="card-h"><span class="card-t">휴복직 조회 / 등록</span></div>
+    <div class="card-b">
+     <div style="display:flex;gap:8px"><input class="finp" id="leave-q" placeholder="사번 또는 성명..."><button class="btn btn-p" id="btn-leave-search">조회</button></div>
+     <div id="leave-emp-result"></div>
+    </div>
+   </div>
+   <div class="card"><div class="card-h"><span class="card-t">휴복직 내역</span></div>
+    <div class="tw"><table><thead><tr><th>이름</th><th>사번</th><th>종류</th><th>시작일</th><th>종료(예정)</th><th>복직일</th><th>상태</th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="7" class="empty">없음</td></tr>'}</tbody></table></div>
+   </div>
+  </div>`;
+  const doS=()=>lookupEmployee(document.getElementById('leave-q').value.trim(),e=>showLeaveForm(e));
+  document.getElementById('btn-leave-search').addEventListener('click',doS);
+  document.getElementById('leave-q').addEventListener('keydown',e=>{if(e.key==='Enter')doS()});
+}
+function showLeaveForm(e){
+  curLeaveEmpId=e._id;
+  const leaves=(LVDB()[e._id]||[]).sort((a,b)=>(b.startDate||'').localeCompare(a.startDate||''));
+  const now=new Date();
+  const rows=leaves.map((l,i)=>{const isA=getActiveLeave(e._id,now)?.startDate===l.startDate;return`<tr><td><span class="bdg bdg-lv">${l.leaveType||'-'}</span></td><td style="font-size:11px">${l.startDate||'-'}</td><td style="font-size:11px">${l.endDate||'미정'}</td><td style="font-size:11px">${l.returnDate||'-'}</td><td>${isA?'<span class="bdg bdg-lv">휴직 중</span>':'<span class="bdg bdg-r">복직</span>'}</td><td><button class="btn btn-d btn-xs _del-leave" data-idx="${i}">삭제</button></td></tr>`}).join('');
+  const res=document.getElementById('leave-emp-result');
+  res.innerHTML=`<div style="margin-top:12px">
+   <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--g100);margin-bottom:12px">
+    ${avHTML(e,32)}<div><div style="font-size:13px;font-weight:700">${e.nameKr}</div><div style="font-size:11px;color:var(--g500)">${e.empId||''} · ${e.group||''}</div></div>
+    <button class="btn btn-p btn-sm" id="btn-add-leave" style="margin-left:auto">+ 휴복직 추가</button>
+   </div>
+   <div class="tw"><table><thead><tr><th>종류</th><th>시작일</th><th>종료(예정)</th><th>복직일</th><th>상태</th><th></th></tr></thead>
+   <tbody>${rows||'<tr><td colspan="6" class="empty">없음</td></tr>'}</tbody></table></div>
+  </div>`;
+  document.getElementById('btn-add-leave').addEventListener('click',()=>openAddLeave(e._id));
+  res.querySelectorAll('._del-leave').forEach(btn=>btn.addEventListener('click',async function(){
+    try{await dbDeleteLeave(e._id,+this.dataset.idx);await loadAllData();showLeaveForm(DB().find(x=>x._id===e._id)||e);toast('삭제 완료','ok')}
+    catch(err){toast('삭제 실패','err')}
+  }));
+}
+function openAddLeave(empId){
+  curLeaveEmpId=empId;const e=DB().find(x=>x._id===empId)||{};
+  document.getElementById('m-leave-t').textContent=`휴복직 등록 — ${e.nameKr||''}`;
+  document.getElementById('m-leave-b').innerHTML=`
+  <div class="fg">
+   <div class="fgrp ff"><label class="flbl">휴직종류 <span class="req">*</span></label>
+    <select class="fsel2" id="lv-type"><option value="">선택...</option>${LEAVE_TYPES.map(t=>`<option>${t}</option>`).join('')}</select>
+   </div>
+   <div class="fgrp"><label class="flbl">휴직 시작일 <span class="req">*</span></label>${dpHTML('lv-start')}</div>
+   <div class="fgrp"><label class="flbl">휴직 종료(예정)일</label>${dpHTML('lv-end')}</div>
+   <div class="fgrp"><label class="flbl">복직일</label>${dpHTML('lv-return')}</div>
+   <div class="fgrp ff"><label class="flbl">비고</label><textarea class="ftxt" id="lv-note" rows="2"></textarea></div>
+  </div>`;
+  dpInitAll(['lv-start','lv-end','lv-return']);OM('m-leave');
+}
+async function saveLeave(){
+  const type=document.getElementById('lv-type').value;const start=document.getElementById('lv-start').value;
+  if(!type||!start){toast('휴직종류와 시작일을 입력하세요.','err');return}
+  try{await dbAddLeave(curLeaveEmpId,{leaveType:type,startDate:start,endDate:document.getElementById('lv-end').value,returnDate:document.getElementById('lv-return').value,note:document.getElementById('lv-note').value});await loadAllData();CM('m-leave');const e=DB().find(x=>x._id===curLeaveEmpId);if(e)showLeaveForm(e);showPopup('🏖️','휴복직 등록 완료','등록 완료',null)}
+  catch(e){toast('저장 실패','err')}
+}
+
+// ══════════════ EVAL ══════════════
+function renderEval(){
+  const evdb=EVDB();const data=DB();
+  const allE=[];Object.entries(evdb).forEach(([eid,arr])=>{const emp=data.find(x=>x._id===eid);if(!emp)return;arr.forEach(e=>allE.push({...e,emp}))});
+  allE.sort((a,b)=>b.year-a.year);
+  const rows=allE.slice(0,20).map(e=>`<tr><td>${e.year}</td><td><div class="td-nm">${avHTML(e.emp,22)}<span style="margin-left:6px;font-weight:600">${e.emp.nameKr}</span></div></td><td style="font-size:11px">${e.emp.empId||'-'}</td><td>${evalTypeBdg(e.type)}</td><td><span class="bdg bdg-mg">${e.grade}</span></td><td style="font-size:11px">${e.note||''}</td></tr>`).join('');
+  document.getElementById('cnt').innerHTML=`
+  <div style="display:flex;flex-direction:column;gap:14px">
+   <div class="card"><div class="card-h"><span class="card-t">평가결과 조회 / 등록</span></div>
+    <div class="card-b">
+     <div style="display:flex;gap:8px"><input class="finp" id="eval-q" placeholder="사번 또는 성명..."><button class="btn btn-p" id="btn-eval-search">조회</button></div>
+     <div id="eval-emp-result"></div>
+    </div>
+   </div>
+   <div class="card"><div class="card-h"><span class="card-t">최근 평가 내역</span>
+    <div style="display:flex;gap:6px"><button class="btn btn-s btn-sm" id="btn-eval-tpl">📥 업로드 양식</button><button class="btn btn-p btn-sm" id="btn-eval-ul">📤 대량 업로드</button><input type="file" id="eval-ul-file" accept=".xlsx,.xls,.csv" style="display:none"></div>
+   </div>
+    <div class="tw"><table><thead><tr><th>년도</th><th>이름</th><th>사번</th><th>평가유형</th><th>등급</th><th>비고</th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="6" class="empty">없음</td></tr>'}</tbody></table></div>
+   </div>
+  </div>`;
+  const doS=()=>lookupEmployee(document.getElementById('eval-q').value.trim(),e=>showEvalForm(e));
+  document.getElementById('btn-eval-search').addEventListener('click',doS);
+  document.getElementById('eval-q').addEventListener('keydown',e=>{if(e.key==='Enter')doS()});
+  document.getElementById('btn-eval-tpl').addEventListener('click',dlEvalTemplate);
+  document.getElementById('btn-eval-ul').addEventListener('click',()=>document.getElementById('eval-ul-file').click());
+  document.getElementById('eval-ul-file').addEventListener('change',function(){handleEvalUpload(this)});
+}
+function evalTypeBdg(t){const m={performance:'bdg-tech',corevalue:'bdg-nt',final:'bdg-mg'};const l={performance:'Performance',corevalue:'Core Value',final:'Final Grade'};return`<span class="bdg ${m[t]||''}">${l[t]||t}</span>`}
+function showEvalForm(e){
+  curEvalEmpId=e._id;
+  const ee=(EVDB()[e._id]||[]).sort((a,b)=>b.year-a.year);
+  const years=[...new Set(ee.map(x=>x.year))].sort().reverse();
+  const rows=years.map(yr=>{const pv=ee.find(x=>x.year===yr&&x.type==='performance');const cv=ee.find(x=>x.year===yr&&x.type==='corevalue');const fg=ee.find(x=>x.year===yr&&x.type==='final');return`<tr><td style="text-align:center;font-weight:700">${yr}</td><td style="text-align:center">${pv?`<span class="bdg bdg-tech">${pv.grade}</span>`:'-'}</td><td style="text-align:center">${cv?`<span class="bdg bdg-nt">${cv.grade}</span>`:'-'}</td><td style="text-align:center">${fg?`<span class="bdg" style="background:var(--mg);color:#fff">${fg.grade}</span>`:'-'}</td></tr>`}).join('');
+  const res=document.getElementById('eval-emp-result');
+  res.innerHTML=`<div style="margin-top:12px">
+   <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--g100);margin-bottom:12px">
+    ${avHTML(e,32)}<div><div style="font-size:13px;font-weight:700">${e.nameKr}</div><div style="font-size:11px;color:var(--g500)">${e.empId||''} · ${e.group||''}</div></div>
+    <button class="btn btn-p btn-sm" id="btn-add-eval" style="margin-left:auto">+ 평가 추가</button>
+   </div>
+   <table class="ed-table"><thead><tr><th style="text-align:center">년도</th><th style="text-align:center">Performance</th><th style="text-align:center">Core Value</th><th style="text-align:center">Final</th></tr></thead>
+   <tbody>${rows||'<tr><td colspan="4" class="empty">없음</td></tr>'}</tbody></table>
+  </div>`;
+  document.getElementById('btn-add-eval').addEventListener('click',()=>openAddEval(e._id));
+}
+function openAddEval(empId){
+  curEvalEmpId=empId;const e=DB().find(x=>x._id===empId)||{};
+  document.getElementById('m-eval-t').textContent=`평가 등록 — ${e.nameKr||''}`;
+  document.getElementById('m-eval-b').innerHTML=`
+  <div class="fg">
+   <div class="fgrp"><label class="flbl">평가 년도 <span class="req">*</span></label><input class="finp" id="ev-yr" type="number" value="${new Date().getFullYear()}"></div>
+   <div class="fgrp"><label class="flbl">평가 유형 <span class="req">*</span></label>
+    <select class="fsel2" id="ev-type"><option value="performance">Performance Review</option><option value="corevalue">Core Value Review</option><option value="final">Final Grade</option></select>
+   </div>
+   <div class="fgrp"><label class="flbl">등급 <span class="req">*</span></label>
+    <select class="fsel2" id="ev-grade">${EVAL_GRADES.performance.map(g=>`<option>${g}</option>`).join('')}</select>
+   </div>
+   <div class="fgrp ff"><label class="flbl">비고</label><input class="finp" id="ev-note"></div>
+  </div>`;
+  document.getElementById('ev-type').addEventListener('change',function(){document.getElementById('ev-grade').innerHTML=(EVAL_GRADES[this.value]||[]).map(g=>`<option>${g}</option>`).join('')});
+  OM('m-eval');
+}
+async function saveEval(){
+  const yr=parseInt(document.getElementById('ev-yr').value);const type=document.getElementById('ev-type').value;const grade=document.getElementById('ev-grade').value;
+  if(!yr||!type||!grade){toast('모든 항목을 입력하세요.','err');return}
+  try{await dbUpsertEvaluation(curEvalEmpId,yr,type,grade,document.getElementById('ev-note').value);await loadAllData();CM('m-eval');const e=DB().find(x=>x._id===curEvalEmpId);if(e)showEvalForm(e);toast('평가 등록 완료','ok')}
+  catch(e){toast('저장 실패','err')}
+}
+function dlEvalTemplate(){
+  const yr=new Date().getFullYear();const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([['EMP ID','KR Name','Year','Eval Type (performance/corevalue/final)','Grade','Note'],['EMP001','홍길동',yr,'performance','MVC',''],['EMP001','홍길동',yr,'corevalue','EX',''],['EMP001','홍길동',yr,'final','O','']]);
+  XLSX.utils.book_append_sheet(wb,ws,'Eval_Upload');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['유형','등급(높은순)'],['performance','MVC/VC/FC/PC/LC'],['corevalue','EX/ME/ND'],['final','O/EE/ME/BE/NI']]),'등급안내');
+  XLSX.writeFile(wb,'MangoBoost_Eval_Template.xlsx');toast('다운로드 완료','ok');
+}
+async function handleEvalUpload(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async ev=>{
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'binary',cellDates:false});
+      const json=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+      const data=DB();let ok=0,skip=0;
+      for(const row of json){
+        const empId=String(row['EMP ID']||'').trim();const year=parseInt(row['Year']||0);
+        const type=String(row['Eval Type (performance/corevalue/final)']||'').trim().toLowerCase();
+        const grade=String(row['Grade']||'').trim();const note=String(row['Note']||'').trim();
+        if(!empId||!year||!type||!grade){skip++;continue}
+        const emp=data.find(e=>e.empId===empId);if(!emp){skip++;continue}
+        try{await dbUpsertEvaluation(emp._id,year,type,grade,note);ok++}catch(e){skip++}
+      }
+      await loadAllData();renderEval();
+      showPopup('📊','평가 업로드 완료',`${ok}건 등록 완료 / ${skip}건 건너뜀`,null);
+    }catch(err){toast('오류: '+err.message,'err')}
+  };
+  reader.readAsBinaryString(file);input.value='';
+}
+
+// ══════════════ DISCIPLINE ══════════════
+function renderDisc(){
+  const data=DB();const dcdb=DCDB();const allD=[];
+  Object.entries(dcdb).forEach(([eid,arr])=>{const emp=data.find(x=>x._id===eid);if(!emp)return;arr.forEach(d=>allD.push({...d,emp}))});
+  allD.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const rows=allD.slice(0,30).map(d=>`<tr><td><div class="td-nm">${avHTML(d.emp,22)}<span style="margin-left:6px;font-weight:600">${d.emp.nameKr}</span></div></td><td style="font-size:11px">${d.emp.empId||'-'}</td><td style="font-size:11px">${d.date||'-'}</td><td><span class="bdg bdg-disc">${d.type||'-'}</span></td><td style="font-size:11px">${d.content||'-'}</td><td style="font-size:11px">${d.note||''}</td></tr>`).join('');
+  document.getElementById('cnt').innerHTML=`
+  <div style="display:flex;flex-direction:column;gap:14px">
+   <div class="card"><div class="card-h"><span class="card-t">징계 조회 / 등록</span></div>
+    <div class="card-b">
+     <div style="display:flex;gap:8px"><input class="finp" id="disc-q" placeholder="사번 또는 성명..."><button class="btn btn-p" id="btn-disc-search">조회</button></div>
+     <div id="disc-emp-result"></div>
+    </div>
+   </div>
+   <div class="card"><div class="card-h"><span class="card-t">징계 전체 내역</span></div>
+    <div class="tw"><table><thead><tr><th>이름</th><th>사번</th><th>일자</th><th>종류</th><th>내용</th><th>비고</th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="6" class="empty">없음</td></tr>'}</tbody></table></div>
+   </div>
+  </div>`;
+  const doS=()=>lookupEmployee(document.getElementById('disc-q').value.trim(),e=>showDiscForm(e));
+  document.getElementById('btn-disc-search').addEventListener('click',doS);
+  document.getElementById('disc-q').addEventListener('keydown',e=>{if(e.key==='Enter')doS()});
+}
+function showDiscForm(e){
+  curDiscEmpId=e._id;
+  const discs=(DCDB()[e._id]||[]).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const rows=discs.map((d,i)=>`<tr><td style="font-size:11px">${d.date||'-'}</td><td><span class="bdg bdg-disc">${d.type||'-'}</span></td><td style="font-size:11px">${d.content||'-'}</td><td style="font-size:11px">${d.note||''}</td><td><button class="btn btn-d btn-xs _del-disc" data-idx="${i}">삭제</button></td></tr>`).join('');
+  const res=document.getElementById('disc-emp-result');
+  res.innerHTML=`<div style="margin-top:12px">
+   <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--g100);margin-bottom:12px">
+    ${avHTML(e,32)}<div><div style="font-size:13px;font-weight:700">${e.nameKr}</div><div style="font-size:11px;color:var(--g500)">${e.empId||''} · ${e.group||''}</div></div>
+    <button class="btn btn-p btn-sm" id="btn-add-disc" style="margin-left:auto">+ 징계 추가</button>
+   </div>
+   <div class="tw"><table><thead><tr><th>일자</th><th>종류</th><th>내용</th><th>비고</th><th></th></tr></thead>
+   <tbody>${rows||'<tr><td colspan="5" class="empty">없음</td></tr>'}</tbody></table></div>
+  </div>`;
+  document.getElementById('btn-add-disc').addEventListener('click',()=>openAddDisc(e._id));
+  res.querySelectorAll('._del-disc').forEach(btn=>btn.addEventListener('click',async function(){
+    try{await dbDeleteDiscipline(e._id,+this.dataset.idx);await loadAllData();showDiscForm(DB().find(x=>x._id===e._id)||e);toast('삭제 완료','ok')}
+    catch(err){toast('삭제 실패','err')}
+  }));
+}
+function openAddDisc(empId){
+  curDiscEmpId=empId;const e=DB().find(x=>x._id===empId)||{};
+  document.getElementById('m-disc-t').textContent=`징계 등록 — ${e.nameKr||''}`;
+  document.getElementById('m-disc-b').innerHTML=`
+  <div class="fg">
+   <div class="fgrp"><label class="flbl">징계일자 <span class="req">*</span></label>${dpHTML('dc-date')}</div>
+   <div class="fgrp"><label class="flbl">징계종류 <span class="req">*</span></label>
+    <select class="fsel2" id="dc-type"><option value="">선택...</option>${DISC_TYPES.map(t=>`<option>${t}</option>`).join('')}</select>
+   </div>
+   <div class="fgrp ff"><label class="flbl">내용 <span class="req">*</span></label><textarea class="ftxt" id="dc-content" rows="3"></textarea></div>
+   <div class="fgrp ff"><label class="flbl">비고</label><input class="finp" id="dc-note"></div>
+  </div>`;
+  dpInit('dc-date');OM('m-disc');
+}
+async function saveDisc(){
+  const date=document.getElementById('dc-date').value.trim();const type=document.getElementById('dc-type').value;const content=document.getElementById('dc-content').value.trim();
+  if(!date||!type||!content){toast('일자, 종류, 내용을 입력하세요.','err');return}
+  try{await dbAddDiscipline(curDiscEmpId,{date,type,content,note:document.getElementById('dc-note').value});await loadAllData();CM('m-disc');const e=DB().find(x=>x._id===curDiscEmpId);if(e)showDiscForm(e);toast('등록 완료','ok')}
+  catch(e){toast('저장 실패','err')}
+}
+
+// ══════════════ PHOTOS ══════════════
+function renderPhotos(){
+  const data=DB();const ph=PHDB();
+  // ✅ 수정: 속성 따옴표 버그 수정 — data-id 로 통일
+  const cards=data.slice(0,80).map(e=>{
+    const hasPh=!!ph[e._id];
+    return`<div style="text-align:center;padding:10px 6px;border:1px solid var(--g200);border-radius:var(--r);background:#fff">
+      <div style="margin-bottom:6px">${hasPh
+        ?`<img src="${ph[e._id]}" style="width:56px;height:70px;object-fit:cover;border-radius:6px;border:2px solid var(--mg-m)">`
+        :`<div style="width:56px;height:70px;background:var(--g100);border-radius:6px;display:flex;align-items:center;justify-content:center;margin:0 auto;border:2px dashed var(--g300)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--g400)" stroke-width="1.2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>`
+      }</div>
+      <div style="font-size:10px;font-weight:700;margin-bottom:1px">${e.nameKr||'-'}</div>
+      <div style="font-size:9px;color:var(--g400)">${e.empId||'-'}</div>
+      <button class="btn btn-s btn-xs _photo-btn" data-id="${e._id}" style="margin-top:4px;width:100%;font-size:9px">${hasPh?'변경':'업로드'}</button>
+    </div>`;
+  }).join('');
+  document.getElementById('cnt').innerHTML=`
+  <div class="card" style="margin-bottom:12px"><div class="card-h"><span class="card-t">사진 검색</span></div>
+   <div class="card-b"><div style="display:flex;gap:8px"><input class="finp" id="photo-q" placeholder="사번 또는 성명..."><button class="btn btn-p" id="btn-photo-search">검색</button></div></div>
+  </div>
+  <div class="card"><div class="card-h"><span class="card-t">전체 (${data.length}명)</span></div>
+   <div class="card-b"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px">${cards||'<div class="empty">없음</div>'}</div></div>
+  </div>`;
+  document.getElementById('btn-photo-search').addEventListener('click',()=>lookupEmployee(document.getElementById('photo-q').value.trim(),e=>openPhotoModal(e._id)));
+  // ✅ 수정: querySelectorAll 로 이벤트 바인딩
+  document.querySelectorAll('._photo-btn').forEach(el=>el.addEventListener('click',function(){openPhotoModal(this.dataset.id)}));
+}
+
+function openPhotoModal(empId){
+  curPhotoEmpId=empId;const e=DB().find(x=>x._id===empId)||{};const ph=PHDB();
+  document.getElementById('m-photo-b').innerHTML=`
+  <div style="text-align:center;margin-bottom:14px"><div id="ph-preview" style="margin-bottom:10px">${ph[empId]?`<img src="${ph[empId]}" style="width:90px;height:112px;object-fit:cover;border-radius:var(--r);border:2px solid var(--mg-m)">`:`<div style="width:90px;height:112px;background:var(--g100);border-radius:var(--r);display:flex;align-items:center;justify-content:center;margin:0 auto;border:2px dashed var(--g300)"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--g400)" stroke-width="1.2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>`}</div>
+   <div style="font-weight:700">${e.nameKr||'-'}</div><div style="font-size:11px;color:var(--g500)">${e.empId||''}</div></div>
+  <div class="uz" style="padding:24px" id="ph-uz"><div style="font-size:13px;color:var(--g500)">📷 클릭하여 업로드</div><div style="font-size:11px;color:var(--g400);margin-top:4px">Storage에 저장됩니다</div></div>
+  <input type="file" id="ph-file" accept="image/*" style="display:none">
+  <div style="margin-top:10px"><label class="flbl" style="display:block;margin-bottom:4px">이미지 URL 직접 입력</label>
+   <div style="display:flex;gap:6px"><input class="finp" id="ph-url" placeholder="https://..."><button class="btn btn-p btn-sm" id="btn-ph-url">적용</button></div>
+  </div>
+  ${ph[empId]?`<div style="margin-top:8px;text-align:center"><button class="btn btn-d btn-sm" id="btn-ph-del">사진 삭제</button></div>`:''}`;
+
+  document.getElementById('ph-uz').addEventListener('click',()=>document.getElementById('ph-file').click());
+
+  // ✅ 수정: File 객체를 dbUpsertPhoto에 직접 전달 (Storage 업로드)
+  document.getElementById('ph-file').addEventListener('change',async function(){
+    const file=this.files[0];if(!file)return;
+    try{
+      const url=await dbUpsertPhoto(curPhotoEmpId,file);
+      await loadAllData();
+      document.getElementById('ph-preview').innerHTML=`<img src="${url}" style="width:90px;height:112px;object-fit:cover;border-radius:var(--r);border:2px solid var(--mg-m)">`;
+      toast('저장 완료','ok');
+    }catch(e){toast('저장 실패: '+e.message,'err')}
+    this.value='';
+  });
+
+  document.getElementById('btn-ph-url').addEventListener('click',async()=>{
+    const url=document.getElementById('ph-url').value.trim();if(!url)return;
+    try{await dbUpsertPhoto(curPhotoEmpId,url);await loadAllData();document.getElementById('ph-preview').innerHTML=`<img src="${url}" style="width:90px;height:112px;object-fit:cover;border-radius:var(--r);border:2px solid var(--mg-m)">`;toast('저장 완료','ok')}
+    catch(e){toast('저장 실패: '+e.message,'err')}
+  });
+
+  document.getElementById('btn-ph-del')?.addEventListener('click',async()=>{
+    try{await dbDeletePhoto(curPhotoEmpId);await loadAllData();CM('m-photo');renderPhotos();toast('삭제 완료','ok')}
+    catch(e){toast('삭제 실패','err')}
+  });
+  OM('m-photo');
+}
+
+// ══════════════ UPLOAD ══════════════
+function renderUpload(){
+  document.getElementById('cnt').innerHTML=`
+  <div style="max-width:660px;display:flex;flex-direction:column;gap:14px">
+   <div class="card"><div class="card-h"><span class="card-t">업로드 양식 다운로드</span></div>
+    <div class="card-b"><button class="btn btn-p" id="btn-tpl-dl">📥 HR 업로드 양식 다운로드</button></div>
+   </div>
+   <div class="card"><div class="card-h"><span class="card-t">엑셀 대량 업로드</span></div>
+    <div class="card-b">
+     <div class="info-box" style="margin-bottom:12px">동일 EMP ID 또는 이름이 있으면 모든 정보를 덮어씁니다.<br>발령/평가/징계/휴복직 히스토리는 <strong>항상 보존</strong>됩니다.<br>날짜는 YYYY-MM-DD 형식 권장. 엑셀 직렬번호도 자동 변환.</div>
+     <div class="uz" id="uz"><div style="font-size:13px;color:var(--g500);margin-bottom:4px">📂 클릭 또는 드래그</div><div style="font-size:11px;color:var(--g400)">.xlsx, .xls, .csv</div></div>
+     <input type="file" id="ul-file" accept=".xlsx,.xls,.csv" style="display:none">
+     <div id="ul-result"></div>
+    </div>
+   </div>
+  </div>`;
+  document.getElementById('btn-tpl-dl').addEventListener('click',dlTemplate);
+  const uz=document.getElementById('uz');
+  uz.addEventListener('click',()=>document.getElementById('ul-file').click());
+  uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('dov')});
+  uz.addEventListener('dragleave',()=>uz.classList.remove('dov'));
+  uz.addEventListener('drop',e=>{e.preventDefault();uz.classList.remove('dov');processUpload(e.dataTransfer.files[0])});
+  document.getElementById('ul-file').addEventListener('change',function(){processUpload(this.files[0])});
+}
+function dlTemplate(){
+  const headerRow=COLS.map(c=>c.l);
+  const exampleRow=COLS.map(c=>({no:'1',dupFlag:'',empId:'EMP001',nameKr:'홍길동',nameEn:'Hong Gil-dong',region:'Korea',clevel:'CEO',group:'개발그룹',team:'개발1팀',concurrentOrg:'',jobGroup:'Engineer',jobTitle:'Senior Engineer',jobPosition:'팀원',empType:'Regular',workingHours:'Full Time',status:'Emp',workLocation:'서울',specialFlag:'',visaType:'',visaEnd:'',gender:'Male',hireRoute:'공채',hireChannel:'채용사이트',hiringBonus:'',healthCheck:'O',contract:'O',joinDate:'2022-03-02',contractJoinDate:'',tenure:'',regularDate:'2023-03-02',terminationType:'',resignDate:'',phone:'010-1234-5678',email:'hong@mangoboost.io',address:'서울시 강남구',birthDate:'1990-01-15',age:'',ageGroup:'',education:'학사',school:'서울대학교',major:'컴퓨터공학',undergrad:'서울대학교',prevCareer:'3년',careerYears:'3',careerRange:'3~5년',techFlag:'Tech'})[c.k]||'');
+  const ws=XLSX.utils.aoa_to_sheet([headerRow,exampleRow,Array(COLS.length).fill('')]);
+  ws['!cols']=COLS.map(()=>({wch:16}));
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'HR_Upload');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['컬럼명','필드키'],...COLS.map(c=>[c.l,c.k])]),'컬럼설명');
+  XLSX.writeFile(wb,'MangoBoost_HR_Upload_Template.xlsx');toast('다운로드 완료','ok');
+}
+async function processUpload(file){
+  if(!file)return;
+  const res=document.getElementById('ul-result');
+  res.innerHTML=`<div style="margin-top:12px"><div style="font-size:12px;color:var(--g500)">${file.name} 처리 중...</div><div class="pbw"><div class="pb" id="upb" style="width:0%"></div></div></div>`;
+  let p=0;const pi=setInterval(()=>{p=Math.min(p+10,70);const el=document.getElementById('upb');if(el)el.style.width=p+'%'},100);
+  const reader=new FileReader();
+  reader.onload=async ev=>{
+    clearInterval(pi);
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'binary',cellDates:false});
+      const json=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+      if(!json.length){res.innerHTML+='<p style="color:var(--red);margin-top:8px">데이터 없음</p>';return}
+      const existing=DB();let added=0,updated=0,skipped=0;
+      for(const row of json){
+        const emp={};
+        Object.entries(row).forEach(([h,v])=>{const k=CSV_MAP[String(h).trim()];if(!k)return;let sv=String(v).trim();if(!sv)return;if(DATE_KEYS.includes(k))sv=normDate(sv)||sv;emp[k]=sv});
+        if(!emp.nameKr&&!emp.empId){skipped++;continue}
+        if(emp.birthDate){const a=calcAge(emp.birthDate);if(a){emp.age=a;const y=+a;emp.ageGroup=y<30?'30대미만':y<40?'30~39세':y<50?'40~49세':y<60?'50~59세':'60세이상'}}
+        let found=null;
+        if(emp.empId)found=existing.find(x=>x.empId===emp.empId);
+        if(!found&&emp.nameKr)found=existing.find(x=>x.nameKr===emp.nameKr);
+        if(found){emp._id=found._id;try{await dbUpsertEmployee(emp);updated++}catch(e){skipped++}}
+        else{try{await dbUpsertEmployee(emp);added++}catch(e){skipped++}}
+      }
+      await loadAllData();
+      const pb=document.getElementById('upb');if(pb)pb.style.width='100%';
+      res.innerHTML+=`<div style="margin-top:10px;padding:12px;background:var(--mg-l);border-radius:var(--r);border:1px solid var(--mg-m)"><div style="font-size:13px;font-weight:700;color:var(--mg-d)">✓ 완료</div><div style="font-size:12px;margin-top:3px">신규 ${added}명 · 덮어쓰기 ${updated}명 · 건너뜀 ${skipped}건</div></div>`;
+      showPopup('📂','업로드 완료',`신규 <strong>${added}명</strong> 추가<br>덮어쓰기 <strong>${updated}명</strong><br>히스토리(발령/평가/징계 등) 모두 보존됨`,()=>NAV('dashboard'));
+    }catch(err){res.innerHTML+=`<p style="color:var(--red);margin-top:8px">오류: ${err.message}</p>`}
+  };
+  reader.readAsBinaryString(file);
+}
+
+// ══════════════ DOWNLOAD ══════════════
+function renderDlPage(){
+  document.getElementById('cnt').innerHTML=`
+  <div style="max-width:760px"><div class="card"><div class="card-h"><span class="card-t">엑셀 다운로드</span></div>
+   <div class="card-b">
+    <div class="info-box">기준일 입력 시 해당 시점 재직자 기준. 비우면 현재 시점.</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+     <label class="flbl" style="white-space:nowrap">기준일</label>${dpHTML('dl-date')}
+    </div>
+    <div class="sec-title">컬럼 선택</div>
+    <div id="col-sel-area">${buildColSelector()}</div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+     <button class="btn btn-s btn-sm" id="btn-col-all">전체선택</button>
+     <button class="btn btn-s btn-sm" id="btn-col-none">전체해제</button>
+     <button class="btn btn-p" style="margin-left:auto" id="btn-do-dl">📥 다운로드</button>
+    </div>
+   </div>
+  </div></div>`;
+  dpInit('dl-date');
+  document.getElementById('btn-col-all').addEventListener('click',()=>{colAll(true);document.getElementById('col-sel-area').innerHTML=buildColSelector();bindColSel()});
+  document.getElementById('btn-col-none').addEventListener('click',()=>{colAll(false);document.getElementById('col-sel-area').innerHTML=buildColSelector();bindColSel()});
+  document.getElementById('btn-do-dl').addEventListener('click',doXlsDl);
+  bindColSel();
+}
+function buildColSelector(){
+  const groups=[...new Set(COLS.map(c=>c.g))];
+  return groups.map(g=>`<div style="margin-bottom:10px"><div style="font-size:10px;font-weight:800;color:var(--g500);text-transform:uppercase;margin-bottom:5px">${g}</div><div class="cs-grid">${COLS.filter(c=>c.g===g).map(c=>`<div class="cs-item${selCols.has(c.k)?' on':''}" data-k="${c.k}"><input type="checkbox"${selCols.has(c.k)?' checked':''}> ${c.l}</div>`).join('')}</div></div>`).join('');
+}
+function bindColSel(){document.querySelectorAll('.cs-item[data-k]').forEach(el=>el.addEventListener('click',function(){const k=this.dataset.k;const cb=this.querySelector('input');if(selCols.has(k)){selCols.delete(k);this.classList.remove('on');cb.checked=false}else{selCols.add(k);this.classList.add('on');cb.checked=true}}))}
+function colAll(v){if(v)COLS.forEach(c=>selCols.add(c.k));else selCols.clear()}
+function doXlsDl(){
+  const dateStr=dpVal('dl-date');let refDate=new Date();
+  if(dateStr){const m=dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)refDate=new Date(+m[1],+m[2]-1,+m[3])}
+  const refEnd=new Date(refDate.getFullYear(),refDate.getMonth(),refDate.getDate(),23,59,59);
+  let data=DB().filter(e=>{if(!e.joinDate)return false;const jd=parseDate(e.joinDate);if(!jd||!dateLE(jd,refEnd))return false;if(e.resignDate&&dateLE(parseDate(e.resignDate),refDate))return false;if(e.status==='Resigned'&&!e.resignDate)return false;return true});
+  if(!data.length&&!dateStr)data=DB();
+  const cols=COLS.filter(c=>selCols.has(c.k));
+  const ws=XLSX.utils.aoa_to_sheet([cols.map(c=>c.l),...data.map(e=>cols.map(c=>e[c.k]||''))]);
+  ws['!cols']=cols.map(()=>({wch:16}));
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'HR Data');
+  const tag=dateStr||new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb,`MangoBoost_HR_${tag}.xlsx`);
+  CM('m-dl');showPopup('📥','다운로드 완료',`${data.length}명 데이터 다운로드 완료`,null);
+}
+
+// ══════════════ SETTINGS ══════════════
+async function renderSettings(){
+  const user=_currentUser;
+  const admins=await dbGetAllAdmins();
+  const isMaster=_currentRole==='master';
+
+  const adminRows=admins.map(a=>`
+    <tr>
+      <td style="font-size:12px">${a.email||'-'}</td>
+      <td>${roleBdg(a.role)}</td>
+      <td>
+        ${isMaster&&a.user_id!==user.id?`
+          <select class="fsel" style="padding:3px 6px;font-size:11px" onchange="changeRole('${a.user_id}','${a.email}',this.value)">
+            <option value="master"${a.role==='master'?' selected':''}>Master</option>
+            <option value="admin"${a.role==='admin'?' selected':''}>Admin</option>
+            <option value="viewer"${a.role==='viewer'?' selected':''}>Viewer</option>
+          </select>
+          <button class="btn btn-d btn-xs" style="margin-left:4px" onclick="removeAdmin('${a.user_id}')">삭제</button>
+        `:a.user_id===user.id?'<span style="font-size:11px;color:var(--g400)">(본인)</span>':''}
+      </td>
+    </tr>`).join('');
+
+  document.getElementById('cnt').innerHTML=`
+  <div style="max-width:760px;display:flex;flex-direction:column;gap:14px">
+   <div class="card"><div class="card-h"><span class="card-t">현재 로그인 계정</span></div>
+    <div class="card-b">
+     <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--g50);border-radius:var(--r)">
+      <div class="sb-av" style="width:40px;height:40px;font-size:16px">${(user?.email||'?')[0].toUpperCase()}</div>
+      <div><div style="font-size:14px;font-weight:700">${user?.user_metadata?.full_name||user?.email||'-'}</div>
+       <div style="font-size:12px;color:var(--g500)">${user?.email||''}</div>
+       <div style="margin-top:4px">${roleBdg(_currentRole)}</div>
+      </div>
+     </div>
+    </div>
+   </div>
+
+   <!-- ✅ 권한 관리 테이블 -->
+   <div class="card"><div class="card-h"><span class="card-t">🔐 권한 관리</span></div>
+    <div class="card-b">
+     <div class="info-box">Master만 권한을 변경할 수 있습니다. Master는 1명만 존재합니다.<br>권한 등급: Master(전체) > Admin(읽기+쓰기) > Viewer(읽기전용)</div>
+     <div class="tw"><table><thead><tr><th>이메일</th><th>권한</th><th>관리</th></tr></thead>
+     <tbody id="admin-rows">${adminRows||'<tr><td colspan="3" class="empty">없음</td></tr>'}</tbody></table></div>
+    </div>
+   </div>
+
+   <!-- 팀원 초대 -->
+   ${isMaster?`<div class="card">
+    <div class="card-h"><span class="card-t">팀원 초대</span></div>
+    <div class="card-b">
+     <div class="info-box">이메일을 입력하면 <strong>초대 링크(매직링크)가 이메일로 발송</strong>됩니다.<br>초대 후 권한 관리 테이블에서 역할을 지정하세요.</div>
+     <div style="display:flex;gap:8px;margin-bottom:8px">
+      <input class="finp" id="invite-email" placeholder="name@mangoboost.io" style="flex:1">
+      <select class="fsel" id="invite-role"><option value="viewer">Viewer</option><option value="admin">Admin</option></select>
+      <button class="btn btn-p" id="btn-send-invite">초대 발송</button>
+     </div>
+     <div id="invite-result"></div>
+    </div>
+   </div>`:''}
+
+   <!-- Master 권한 양도 (master 전용) -->
+   ${isMaster?`<div class="card"><div class="card-h"><span class="card-t">👑 Master 권한 양도</span></div>
+    <div class="card-b">
+     <div class="warn-box" style="margin-bottom:10px">⚠ Master 권한을 양도하면 본인은 Admin으로 강등됩니다. 되돌릴 수 없습니다.</div>
+     <div style="display:flex;gap:8px">
+      <input class="finp" id="master-target-email" placeholder="양도받을 팀원 이메일..." style="flex:1">
+      <button class="btn btn-d" id="btn-open-master-modal">권한 양도</button>
+     </div>
+    </div>
+   </div>`:''}
+
+   <div class="card"><div class="card-h"><span class="card-t">데이터 현황</span></div>
+    <div class="card-b">
+     <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--g50);border-radius:var(--r)">
+      <div><div style="font-size:12px;font-weight:600">전체 직원 수</div><div style="font-size:11px;color:var(--g500)">${DB().length}명 등록됨</div></div>
+      <span class="bdg bdg-r">정상 연동</span>
+     </div>
+    </div>
+   </div>
+
+   ${isMaster?`<div class="danger-zone">
+    <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:8px">⚠ 위험 영역</div>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+     <div><div style="font-size:12px;font-weight:600">전체 직원 데이터 초기화</div><div style="font-size:11px;color:var(--g500)">직원 기본정보만 삭제 (발령/평가/징계 히스토리는 보존)</div></div>
+     <button class="btn btn-d btn-sm" id="btn-reset-emps">초기화</button>
+    </div>
+   </div>`:''}
+  </div>`;
+
+  // 초대 버튼
+  document.getElementById('btn-send-invite')?.addEventListener('click',async()=>{
+    const email=document.getElementById('invite-email').value.trim();
+    const role=document.getElementById('invite-role').value;
+    const resultEl=document.getElementById('invite-result');
+    resultEl.innerHTML='';
+    if(!email){toast('이메일을 입력하세요.','err');return}
+    if(!email.endsWith('@mangoboost.io')){resultEl.innerHTML=`<div style="color:var(--red);font-size:12px;margin-top:6px">@mangoboost.io 이메일만 초대 가능합니다.</div>`;return}
+    document.getElementById('btn-send-invite').textContent='발송 중...';
+    document.getElementById('btn-send-invite').disabled=true;
+    try{
+      // ✅ 수정: signInWithOtp (매직링크) 방식 — 클라이언트에서 안전하게 호출 가능
+      const{error}=await supa.auth.signInWithOtp({
+        email,
+        options:{emailRedirectTo:window.location.origin,shouldCreateUser:true}
+      });
+      if(error)throw error;
+      // 미리 권한 등록 (user_id는 로그인 후 실제 갱신 필요 — 임시로 이메일로 구분)
+      resultEl.innerHTML=`<div style="color:var(--green);font-size:12px;font-weight:600;margin-top:6px;padding:8px 12px;background:var(--green-l);border-radius:var(--r)">✅ <strong>${email}</strong> 로 초대 링크가 발송되었습니다!<br><span style="font-weight:400">팀원이 로그인하면 권한 관리 테이블에서 역할을 지정하세요.</span></div>`;
+      document.getElementById('invite-email').value='';
+    }catch(e){
+      resultEl.innerHTML=`<div style="color:var(--red);font-size:12px;margin-top:6px">발송 실패: ${e.message}</div>`;
+    }
+    document.getElementById('btn-send-invite').textContent='초대 발송';
+    document.getElementById('btn-send-invite').disabled=false;
+  });
+
+  // Master 권한 양도 모달 열기
+  document.getElementById('btn-open-master-modal')?.addEventListener('click',()=>{
+    const targetEmail=document.getElementById('master-target-email').value.trim();
+    if(!targetEmail){toast('양도받을 이메일을 입력하세요.','err');return}
+    const target=admins.find(a=>a.email===targetEmail);
+    if(!target){toast('해당 이메일의 팀원이 권한 목록에 없습니다. 먼저 초대 후 로그인시켜 주세요.','err');return}
+    if(target.user_id===user.id){toast('본인에게는 양도할 수 없습니다.','err');return}
+    _masterTransferTarget=target;
+    document.getElementById('m-master-b').innerHTML=`
+    <div style="text-align:center;padding:8px 0">
+     <div style="font-size:24px;margin-bottom:8px">👑</div>
+     <div style="font-size:14px;font-weight:700;margin-bottom:6px">권한 양도 확인</div>
+     <div style="font-size:13px;color:var(--g600);line-height:1.7">
+      <strong>${target.email}</strong> 에게<br>
+      Master 권한을 양도합니다.<br>
+      <span style="color:var(--red);font-size:11px;font-weight:600">본인은 Admin으로 강등되며 되돌릴 수 없습니다.</span>
+     </div>
+    </div>`;
+    OM('m-master');
+  });
+
+  // 초기화 버튼
+  document.getElementById('btn-reset-emps')?.addEventListener('click',async()=>{
+    if(!confirm('직원 기본정보를 전부 삭제합니까?'))return;
+    try{await supa.from('employees').delete().neq('id','00000000-0000-0000-0000-000000000000');await loadAllData();renderSettings();toast('초기화 완료','ok')}
+    catch(e){toast('실패: '+e.message,'err')}
+  });
+}
+
+// 권한 변경 (인라인 select)
+async function changeRole(userId,email,newRole){
+  if(newRole==='master'){
+    if(!confirm(`${email} 을 Master로 승격하면 현재 Master가 Admin으로 강등됩니다. 계속하시겠습니까?`))return;
+    await dbTransferMaster(_currentUser.id,userId,email);
+    _currentRole='admin';
+    buildSidebar();
+    document.getElementById('sb-badge').innerHTML=roleBdg('admin');
+  } else {
+    await dbUpsertAdminRole(userId,email,newRole);
+  }
+  toast('권한 변경 완료','ok');
+  renderSettings();
+}
+// 권한 삭제
+async function removeAdmin(userId){
+  if(!confirm('해당 팀원의 권한을 삭제하시겠습니까?'))return;
+  await dbDeleteAdmin(userId);
+  toast('삭제 완료','ok');
+  renderSettings();
+}
+
+// ✅ 수정: m-master-ok 실제 양도 로직 완성
+document.getElementById('m-master-ok').addEventListener('click',async()=>{
+  if(!_masterTransferTarget){toast('양도 대상 없음','err');return}
+  try{
+    await dbTransferMaster(_currentUser.id,_masterTransferTarget.user_id,_masterTransferTarget.email);
+    _currentRole='admin';
+    buildSidebar();
+    document.getElementById('sb-badge').innerHTML=roleBdg('admin');
+    CM('m-master');
+    _masterTransferTarget=null;
+    showPopup('👑','권한 양도 완료',`Master 권한이 ${_masterTransferTarget?.email||''}에게 양도되었습니다.<br>현재 계정은 Admin으로 변경됩니다.`,()=>renderSettings());
+  }catch(e){toast('양도 실패: '+e.message,'err')}
+});
+
+// ══════════════ INIT ══════════════
+initAuth();
+</script>
+</body>
+</html>
