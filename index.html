@@ -524,6 +524,7 @@ function ADB(){return _cache.assignments}
 function EVDB(){return _cache.evaluations}
 function LVDB(){return _cache.leaves}
 function DCDB(){return _cache.disciplines}
+function NTDB(){return _cache.notes}
 
 // ══════════════ DATE PICKER ══════════════
 const _dpSt={};
@@ -635,7 +636,10 @@ async function initAuth(){
     await onLogin(session.user);
   }
   supa.auth.onAuthStateChange(async(event,session)=>{
+    console.log('[AUTH]', event, session?.user?.email);
     if(event==='SIGNED_IN'&&session){
+      // 이미 앱이 표시된 상태면 재로그인 처리 스킵 (탭 복귀 시 TOKEN_REFRESHED 이벤트 오작동 방지)
+      if(document.getElementById('app').style.display==='block') return;
       document.getElementById('auth').style.display='none';
       await onLogin(session.user);
     }else if(event==='SIGNED_OUT'){
