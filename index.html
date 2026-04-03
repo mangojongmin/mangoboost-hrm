@@ -701,8 +701,7 @@ document.getElementById('btn-logout').addEventListener('click',async()=>{await s
 // ══════════════ NAV ══════════════
 const PAGE_TITLES={dashboard:'대시보드',employees:'개인 인사기록 관리',resign:'퇴직 관리',assign:'발령 관리',leave:'휴복직 관리',eval:'평가결과 관리',discipline:'징계 관리',photos:'사진 관리',upload:'대량 업로드',download:'엑셀 다운로드',settings:'설정 / 권한관리'};
 function NAV(pg){
-  const required=MENU_ROLE[pg]||'viewer';
-  if(!hasRole(required)){toast(`이 메뉴는 ${required} 이상 권한이 필요합니다.`,'err');return}
+  if(!canAccess(pg)){toast('접근 권한이 없습니다.','err');return}
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
   const el=document.querySelector(`.ni[data-pg="${pg}"]`);if(el)el.classList.add('active');
   document.getElementById('pt').textContent=PAGE_TITLES[pg]||pg;
