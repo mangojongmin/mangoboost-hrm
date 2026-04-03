@@ -1454,16 +1454,27 @@ async function renderSettings(){
       const checked=isMasterRow?true:(perms[k]||false);
       const disabled=isMasterRow||isSelf||!isMaster;
       return`<label style="display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 5px;border:1px solid var(--g200);border-radius:4px;cursor:${disabled?'default':'pointer'};background:${checked?'var(--mg-l)':'#fff'};color:${checked?'var(--mg-d)':'var(--g500)'}">
-        <input type="checkbox" data-uid="${a.user_id}" data-email="${a.email||''}" data-role="${a.role}" data-menu="${k}" ${checked?'checked':''} ${disabled?'disabled':''} style="width:10px;height:10px"> ${l}
+        <input type="checkbox" class="_perm-cb" data-uid="${a.user_id}" data-menu="${k}" ${checked?'checked':''} ${disabled?'disabled':''} style="width:10px;height:10px"> ${l}
       </label>`;
     }).join('');
-    const evalToggle=isMasterRow?`<span style="font-size:10px;color:var(--g400)">항상 허용</span>`:`<label style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;cursor:${isSelf||!isMaster?'default':'pointer'};color:${evalAllowed?'var(--green)':'var(--red)'}"><input type="checkbox" data-uid="${a.user_id}" data-email="${a.email||''}" data-eval="1" ${evalAllowed?'checked':''} ${isSelf||!isMaster?'disabled':''} style="width:12px;height:12px;accent-color:var(--green)"> ${evalAllowed?'✅ 허용':'🔒 차단'}</label>`;
+    const evalToggle=isMasterRow
+      ?`<span style="font-size:10px;color:var(--g400)">항상 허용</span>`
+      :`<label style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;cursor:${isSelf||!isMaster?'default':'pointer'};color:${evalAllowed?'var(--green)':'var(--red)'}">
+          <input type="checkbox" class="_eval-cb" data-uid="${a.user_id}" data-email="${a.email||''}" ${evalAllowed?'checked':''} ${isSelf||!isMaster?'disabled':''} style="width:12px;height:12px;accent-color:var(--green)">
+          ${evalAllowed?'✅ 허용':'🔒 차단'}
+        </label>`;
+    const saveBtn=isMaster&&!isSelf&&!isMasterRow
+      ?`<button class="btn btn-p btn-sm _save-perm" data-uid="${a.user_id}" data-email="${a.email||''}" data-role="${a.role}">저장</button>`
+      :'';
     return`<tr>
       <td style="font-size:12px">${a.email||'-'}${isSelf?'<span style="font-size:10px;color:var(--g400);margin-left:4px">(본인)</span>':''}</td>
       <td>${roleBdg(a.role)}</td>
       <td style="line-height:2">${menuChecks}</td>
       <td>${evalToggle}</td>
-      <td>${isMaster&&!isSelf&&!isMasterRow?`<button class="btn btn-d btn-xs" onclick="removeAdmin('${a.user_id}')">삭제</button>`:''}</td>
+      <td style="white-space:nowrap;vertical-align:middle">
+        ${saveBtn}
+        ${isMaster&&!isSelf&&!isMasterRow?`<button class="btn btn-d btn-xs _del-admin" data-uid="${a.user_id}" style="margin-top:4px">삭제</button>`:''}
+      </td>
     </tr>`;
   }).join('');
   document.getElementById('cnt').innerHTML=`
@@ -1510,16 +1521,16 @@ async function renderSettings(){
   </div>`;
 
   if(isMaster){
-    document.querySelectorAll('input[data-menu]').forEach(cb=>{
-      cb.addEventListener('change',async function(){
-        const uid=this.dataset.uid,email=this.dataset.email,role=this.dataset.role,menuKey=this.dataset.menu;
-        const target=admins.find(a=>a.user_id===uid);if(!target)return;
-        const perms={...(target.menu_permissions||{...DEFAULT_PERMISSIONS})};perms[menuKey]=this.checked;
-        const lbl=this.closest('label');if(lbl){lbl.style.background=this.checked?'var(--mg-l)':'#fff';lbl.style.color=this.checked?'var(--mg-d)':'var(--g500)'}
-        try{await dbUpsertAdminRole(uid,email,role,perms);toast(`${email} 권한 저장`,'ok')}catch(e){toast('저장 실패','err')}
+    // 체크박스 라벨 색상만 즉시 반영 (저장은 버튼으로)
+    document.querySelectorAll('._perm-cb').forEach(cb=>{
+      cb.addEventListener('change',function(){
+        const lbl=this.closest('label');
+        if(lbl){lbl.style.background=this.checked?'var(--mg-l)':'#fff';lbl.style.color=this.checked?'var(--mg-d)':'var(--g500)'}
       });
     });
-    document.querySelectorAll('input[data-eval]').forEach(cb=>{
+
+    // 평가 열람은 즉시 저장 (단독 토글이라 race condition 없음)
+    document.querySelectorAll('._eval-cb').forEach(cb=>{
       cb.addEventListener('change',async function(){
         const uid=this.dataset.uid,email=this.dataset.email,canView=this.checked;
         const lbl=this.closest('label');
@@ -1530,6 +1541,34 @@ async function renderSettings(){
         }catch(e){toast('저장 실패','err')}
       });
     });
+
+    // 저장 버튼 — 해당 유저의 체크박스 전체를 한 번에 읽어서 저장
+    document.querySelectorAll('._save-perm').forEach(btn=>{
+      btn.addEventListener('click',async function(){
+        const uid=this.dataset.uid,email=this.dataset.email,role=this.dataset.role;
+        const perms={};
+        document.querySelectorAll(`._perm-cb[data-uid="${uid}"]`).forEach(cb=>{
+          perms[cb.dataset.menu]=cb.checked;
+        });
+        this.textContent='저장 중...';this.disabled=true;
+        try{
+          await dbUpsertAdminRole(uid,email,role,perms);
+          toast(`${email} 권한 저장 완료`,'ok');
+        }catch(e){toast('저장 실패','err')}
+        this.textContent='저장';this.disabled=false;
+      });
+    });
+
+    // 삭제 버튼
+    document.querySelectorAll('._del-admin').forEach(btn=>{
+      btn.addEventListener('click',async function(){
+        if(!confirm('해당 팀원의 권한을 삭제하시겠습니까?'))return;
+        await dbDeleteAdmin(this.dataset.uid);
+        toast('삭제 완료','ok');
+        renderSettings();
+      });
+    });
+
     document.getElementById('btn-send-invite')?.addEventListener('click',async()=>{
       const email=document.getElementById('invite-email').value.trim();
       const resultEl=document.getElementById('invite-result');resultEl.innerHTML='';
@@ -1544,6 +1583,7 @@ async function renderSettings(){
       }catch(e){resultEl.innerHTML=`<div style="color:var(--red);font-size:12px;margin-top:6px">발송 실패: ${e.message}</div>`}
       document.getElementById('btn-send-invite').textContent='초대 발송';document.getElementById('btn-send-invite').disabled=false;
     });
+
     document.getElementById('btn-open-master-modal')?.addEventListener('click',()=>{
       const targetEmail=document.getElementById('master-target-email').value.trim();
       if(!targetEmail){toast('이메일을 입력하세요.','err');return}
@@ -1554,6 +1594,7 @@ async function renderSettings(){
       document.getElementById('m-master-b').innerHTML=`<div style="text-align:center;padding:8px 0"><div style="font-size:24px;margin-bottom:8px">👑</div><div style="font-size:14px;font-weight:700;margin-bottom:6px">권한 양도 확인</div><div style="font-size:13px;color:var(--g600);line-height:1.7"><strong>${target.email}</strong>에게<br>Master 권한을 양도합니다.<br><span style="color:var(--red);font-size:11px;font-weight:600">본인은 Admin으로 강등됩니다.</span></div></div>`;
       OM('m-master');
     });
+
     document.getElementById('btn-reset-emps')?.addEventListener('click',async()=>{
       if(!confirm('직원 기본정보를 전부 삭제합니까?'))return;
       try{await supa.from('employees').delete().neq('id','00000000-0000-0000-0000-000000000000');await loadAllData();renderSettings();toast('초기화 완료','ok')}
