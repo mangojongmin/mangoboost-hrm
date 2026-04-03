@@ -410,10 +410,16 @@ async function dbAddDiscipline(empId,discData){const{error}=await supa.from('dis
 async function dbDeleteDiscipline(empId,idx){const{data}=await supa.from('disciplines').select('id').eq('employee_id',empId).order('created_at');if(data&&data[idx]){await supa.from('disciplines').delete().eq('id',data[idx].id)}}
 
 async function dbGetNote(empId){
-  try{const{data}=await supa.from('notes').select('content').eq('employee_id',empId).single();return data?data.content:''}
-  catch(e){console.error('note load fail:',e);return''}
+  try{
+    const{data}=await supa.from('notes').select('content').eq('employee_id',empId).maybeSingle();
+    return data?data.content:'';
+  }catch(e){console.error('note load fail:',e);return''}
 }
-async function dbUpsertNote(empId,content){const{data:ex}=await supa.from('notes').select('id').eq('employee_id',empId);if(ex&&ex.length>0){await supa.from('notes').update({content,updated_at:new Date().toISOString()}).eq('employee_id',empId)}else{await supa.from('notes').insert({employee_id:empId,content})}}
+async function dbUpsertNote(empId,content){
+  const{data:ex}=await supa.from('notes').select('id').eq('employee_id',empId).maybeSingle();
+  if(ex){await supa.from('notes').update({content,updated_at:new Date().toISOString()}).eq('employee_id',empId)}
+  else{await supa.from('notes').insert({employee_id:empId,content})}
+}
 
 // ── 권한(admins 테이블) DB 함수 ──
 async function dbGetAllAdmins(){
@@ -422,8 +428,15 @@ async function dbGetAllAdmins(){
   return data||[];
 }
 async function dbGetMyRole(userId){
-  const{data}=await supa.from('admins').select('role').eq('user_id',userId).single();
-  return data?data.role:'viewer';
+  try{
+    const{data}=await supa.from('admins').select('role').eq('user_id',userId).maybeSingle();
+    return data?data.role:'viewer';
+  }catch(e){console.error('role load fail:',e);return'viewer'}
+}
+async function dbGetAllAdmins(){
+  const{data,error}=await supa.from('admins').select('*').order('created_at');
+  if(error){console.error('admins load error',error);return[]}
+  return data||[];
 }
 async function dbUpsertAdminRole(userId,email,role){
   const{data:ex}=await supa.from('admins').select('id').eq('user_id',userId);
