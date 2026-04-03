@@ -722,12 +722,7 @@ function renderEmpTbl(){
   }).join('');
   const tblEl=document.getElementById('emp-tbl');
   tblEl.innerHTML=`<div class="tw"><table><thead><tr><th>EMP ID</th><th>이름</th><th>Group</th><th>Team</th><th>Job Title</th><th>고용형태</th><th>상태</th><th>Tech</th><th>입사일</th><th>퇴직일</th></tr></thead><tbody>${rows||'<tr><td colspan="10" class="empty">데이터 없음</td></tr>'}</tbody></table></div>`;
-  tblEl.querySelectorAll('._emp-row').forEach(row=>{
-    row.addEventListener('click',function(){
-      const id=this.dataset.id;
-      openDetailModal(id).catch(e=>console.error(e));
-    });
-  });
+  tblEl.querySelectorAll('._emp-row').forEach(row=>row.addEventListener('click',()=>openDetailModal(row.dataset.id)));
   let pg=`<div class="pg"><span class="pg-inf">총 ${total}명</span><div class="pg-bs"><div class="pg-b" id="pg-prev">‹</div>`;
   for(let i=1;i<=Math.min(pages,7);i++)pg+=`<div class="pg-b${i===empPage?' on':''}" data-p="${i}">${i}</div>`;
   if(pages>7)pg+=`<span style="padding:0 4px">…</span><div class="pg-b${pages===empPage?' on':''}" data-p="${pages}">${pages}</div>`;
@@ -1262,20 +1257,12 @@ function openAddDisc(empId){
   dpInit('dc-date');OM('m-disc');
 }
 async function saveDisc(){
-  const date=document.getElementById('dc-date').value.trim();
-  const type=document.getElementById('dc-type').value;
-  const content=document.getElementById('dc-content').value.trim();
+  const date=document.getElementById('dc-date').value.trim();const type=document.getElementById('dc-type').value;const content=document.getElementById('dc-content').value.trim();
   if(!date||!type||!content){toast('일자, 종류, 내용을 입력하세요.','err');return}
-  const btn=document.getElementById('m-disc-save');
-  btn.textContent='저장 중...';btn.disabled=true;
-  try{
-    await dbAddDiscipline(curDiscEmpId,{date,type,content,note:document.getElementById('dc-note').value});
-    await loadAllData();
-    CM('m-disc');
-    const e=DB().find(x=>x._id===curDiscEmpId);if(e)showDiscForm(e);
-    toast('등록 완료','ok');
-  }catch(e){toast('저장 실패: '+e.message,'err')}
-  btn.textContent='저장';btn.disabled=false;
+  showLoading(true);
+  try{await dbAddDiscipline(curDiscEmpId,{date,type,content,note:document.getElementById('dc-note').value});await loadAllData();CM('m-disc');const e=DB().find(x=>x._id===curDiscEmpId);if(e)showDiscForm(e);toast('등록 완료','ok')}
+  catch(e){toast('저장 실패','err')}
+  showLoading(false);
 }
 
 // ══════════════ PHOTOS ══════════════
