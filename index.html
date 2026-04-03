@@ -402,7 +402,10 @@ async function dbUpsertEvaluation(empId,year,type,grade,note){
   else{await supa.from('evaluations').insert({employee_id:empId,year,type,grade,note})}
 }
 
-async function dbGetLeaves(empId){const{data,error}=await supa.from('leaves').select('*').eq('employee_id',empId).order('created_at');if(error)return[];return(data||[]).map(r=>r.data)}
+async function dbDeleteEvaluation(empId,year,type){
+  const{data,error}=await supa.from('evaluations').delete().eq('employee_id',empId).eq('year',year).eq('type',type);
+  if(error)throw error;
+}const{data,error}=await supa.from('leaves').select('*').eq('employee_id',empId).order('created_at');if(error)return[];return(data||[]).map(r=>r.data)}
 async function dbAddLeave(empId,leaveData){const{error}=await supa.from('leaves').insert({employee_id:empId,data:leaveData});if(error)throw error}
 async function dbDeleteLeave(empId,idx){const{data}=await supa.from('leaves').select('id').eq('employee_id',empId).order('created_at');if(data&&data[idx]){await supa.from('leaves').delete().eq('id',data[idx].id)}}
 
@@ -1292,7 +1295,22 @@ function showEvalForm(e){
   curEvalEmpId=e._id;
   const ee=(EVDB()[e._id]||[]).sort((a,b)=>b.year-a.year);
   const years=[...new Set(ee.map(x=>x.year))].sort().reverse();
-  const rows=years.map(yr=>{const pv=ee.find(x=>x.year===yr&&x.type==='performance');const cv=ee.find(x=>x.year===yr&&x.type==='corevalue');const fg=ee.find(x=>x.year===yr&&x.type==='final');return`<tr><td style="text-align:center;font-weight:700">${yr}</td><td style="text-align:center">${pv?`<span class="bdg bdg-tech">${pv.grade}</span>`:'-'}</td><td style="text-align:center">${cv?`<span class="bdg bdg-nt">${cv.grade}</span>`:'-'}</td><td style="text-align:center">${fg?`<span class="bdg" style="background:var(--mg);color:#fff">${fg.grade}</span>`:'-'}</td></tr>`}).join('');
+  const rows=years.map(yr=>{
+    const pv=ee.find(x=>x.year===yr&&x.type==='performance');
+    const cv=ee.find(x=>x.year===yr&&x.type==='corevalue');
+    const fg=ee.find(x=>x.year===yr&&x.type==='final');
+    const delBtns=[
+      pv?`<button class="btn btn-d btn-xs _del-eval" data-yr="${yr}" data-type="performance">×</button>`:'',
+      cv?`<button class="btn btn-d btn-xs _del-eval" data-yr="${yr}" data-type="corevalue">×</button>`:'',
+      fg?`<button class="btn btn-d btn-xs _del-eval" data-yr="${yr}" data-type="final">×</button>`:'',
+    ];
+    return`<tr>
+      <td style="text-align:center;font-weight:700">${yr}</td>
+      <td style="text-align:center">${pv?`<span class="bdg bdg-tech">${pv.grade}</span> ${delBtns[0]}`:'-'}</td>
+      <td style="text-align:center">${cv?`<span class="bdg bdg-nt">${cv.grade}</span> ${delBtns[1]}`:'-'}</td>
+      <td style="text-align:center">${fg?`<span class="bdg" style="background:var(--mg);color:#fff">${fg.grade}</span> ${delBtns[2]}`:'-'}</td>
+    </tr>`;
+  }).join('');
   const res=document.getElementById('eval-emp-result');
   res.innerHTML=`<div style="margin-top:12px">
    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--g100);margin-bottom:12px">
@@ -1300,9 +1318,21 @@ function showEvalForm(e){
     <button class="btn btn-p btn-sm" id="btn-add-eval" style="margin-left:auto">+ 평가 추가</button>
    </div>
    <table class="ed-table"><thead><tr><th style="text-align:center">년도</th><th style="text-align:center">Performance</th><th style="text-align:center">Core Value</th><th style="text-align:center">Final</th></tr></thead>
-   <tbody>${rows||'<tr><td colspan="4" class="empty">없음</td></tr>'}</tbody></table>
+   <tbody id="eval-rows">${rows||'<tr><td colspan="4" class="empty">없음</td></tr>'}</tbody></table>
   </div>`;
   document.getElementById('btn-add-eval').addEventListener('click',()=>openAddEval(e._id));
+  // 삭제 버튼
+  document.querySelectorAll('._del-eval').forEach(btn=>btn.addEventListener('click',async function(){
+    const yr=+this.dataset.yr;const type=this.dataset.type;
+    const typeLabel={performance:'Performance',corevalue:'Core Value',final:'Final Grade'};
+    if(!confirm(`${yr}년 ${typeLabel[type]} 평가를 삭제할까요?`))return;
+    try{
+      await dbDeleteEvaluation(e._id,yr,type);
+      await loadAllData();
+      showEvalForm(DB().find(x=>x._id===e._id)||e);
+      toast('삭제 완료','ok');
+    }catch(err){toast('삭제 실패: '+err.message,'err')}
+  }));
 }
 function openAddEval(empId){
   curEvalEmpId=empId;const e=DB().find(x=>x._id===empId)||{};
