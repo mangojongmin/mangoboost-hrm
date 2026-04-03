@@ -1459,21 +1459,75 @@ function renderSettings(){
      </div>
     </div>
    </div>
-   <div class="card"><div class="card-h"><span class="card-t">데이터 관리</span></div>
+
+   <div class="card">
+    <div class="card-h"><span class="card-t">팀원 초대</span></div>
     <div class="card-b">
-     <div class="info-box">Supabase에 연동되어 모든 데이터가 영구 저장됩니다.<br>발령/평가/징계/휴복직 히스토리는 대량 업로드 시에도 보존됩니다.</div>
-     <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--g50);border-radius:var(--r);margin-bottom:8px">
+     <div class="info-box">이메일을 입력하면 <strong>초대 링크가 이메일로 자동 발송</strong>됩니다.<br>받은 메일의 링크를 클릭하면 비밀번호를 직접 설정하고 로그인할 수 있습니다.</div>
+     <div style="display:flex;gap:8px;margin-bottom:8px">
+      <input class="finp" id="invite-email" placeholder="name@mangoboost.io" style="flex:1">
+      <button class="btn btn-p" id="btn-send-invite">초대 이메일 발송</button>
+     </div>
+     <div id="invite-result"></div>
+    </div>
+   </div>
+
+   <div class="card"><div class="card-h"><span class="card-t">데이터 현황</span></div>
+    <div class="card-b">
+     <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--g50);border-radius:var(--r)">
       <div><div style="font-size:12px;font-weight:600">전체 직원 수</div><div style="font-size:11px;color:var(--g500)">${DB().length}명 등록됨</div></div>
-      <span class="bdg bdg-r">정상</span>
+      <span class="bdg bdg-r">정상 연동</span>
      </div>
     </div>
    </div>
+
    <div class="danger-zone">
     <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:8px">⚠ 위험 영역</div>
-    <div style="display:flex;align-items:center;justify-content:space-between"><div><div style="font-size:12px;font-weight:600">전체 직원 데이터 초기화</div><div style="font-size:11px;color:var(--g500)">Supabase에서 직원 기본정보만 삭제 (히스토리 별도 보존)</div></div>
-    <button class="btn btn-d btn-sm" id="btn-reset-emps">초기화</button></div>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+     <div><div style="font-size:12px;font-weight:600">전체 직원 데이터 초기화</div><div style="font-size:11px;color:var(--g500)">직원 기본정보만 삭제 (발령/평가/징계 히스토리는 보존)</div></div>
+     <button class="btn btn-d btn-sm" id="btn-reset-emps">초기화</button>
+    </div>
    </div>
   </div>`;
+
+  // 초대 버튼
+  document.getElementById('btn-send-invite').addEventListener('click', async()=>{
+    const email = document.getElementById('invite-email').value.trim();
+    const resultEl = document.getElementById('invite-result');
+    resultEl.innerHTML='';
+    if(!email){toast('이메일을 입력하세요.','err');return}
+    if(!email.endsWith('@mangoboost.io')){
+      resultEl.innerHTML=`<div style="color:var(--red);font-size:12px;margin-top:6px">@mangoboost.io 이메일만 초대 가능합니다.</div>`;
+      return;
+    }
+    document.getElementById('btn-send-invite').textContent='발송 중...';
+    document.getElementById('btn-send-invite').disabled=true;
+    try{
+      const {error} = await supa.auth.admin?.inviteUserByEmail
+        ? await supa.auth.admin.inviteUserByEmail(email)
+        : await supa.functions.invoke('invite-user', {body:{email}});
+
+      // admin API 없으면 signInWithOtp로 매직링크 발송
+      if(error){
+        const {error:e2} = await supa.auth.signInWithOtp({
+          email,
+          options:{
+            emailRedirectTo: window.location.origin,
+            shouldCreateUser: true,
+          }
+        });
+        if(e2)throw e2;
+      }
+      resultEl.innerHTML=`<div style="color:var(--green);font-size:12px;font-weight:600;margin-top:6px;padding:8px 12px;background:var(--green-l);border-radius:var(--r)">✅ <strong>${email}</strong> 로 초대 링크가 발송되었습니다!<br><span style="font-weight:400">받은 메일함을 확인해주세요. (스팸함도 확인)</span></div>`;
+      document.getElementById('invite-email').value='';
+    }catch(e){
+      resultEl.innerHTML=`<div style="color:var(--red);font-size:12px;margin-top:6px">발송 실패: ${e.message}</div>`;
+    }
+    document.getElementById('btn-send-invite').textContent='초대 이메일 발송';
+    document.getElementById('btn-send-invite').disabled=false;
+  });
+
+  // 초기화 버튼
   document.getElementById('btn-reset-emps').addEventListener('click',async()=>{
     if(!confirm('직원 기본정보를 전부 삭제합니까?'))return;
     showLoading(true);
