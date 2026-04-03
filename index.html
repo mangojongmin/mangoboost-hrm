@@ -737,8 +737,7 @@ document.addEventListener('visibilitychange', async()=>{
 
 function buildSidebar(){
   document.getElementById('sb-nav').innerHTML=ALL_MENUS.map(m=>{
-    const required=MENU_ROLE[m.id]||'viewer';
-    const allowed=hasRole(required);
+    const allowed=canAccess(m.id);
     const lockIcon=!allowed?`<span class="lock">🔒</span>`:'';
     return`<div class="ni${allowed?'':' locked'}" data-pg="${m.id}"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="${m.icon}"/></svg>${m.label}${lockIcon}</div>`;
   }).join('');
