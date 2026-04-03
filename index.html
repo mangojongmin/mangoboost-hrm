@@ -285,18 +285,16 @@ const SUPA_KEY = 'sb_publishable_ZvGfJYXa8Z9yF9RlmA7YVw_hfY9v1p_';
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 // ══════════════ CONSTANTS ══════════════
-// 권한 정의: master > admin > viewer
-// master  : 모든 기능 + 권한관리 + Master 양도
-// admin   : 모든 기능 (설정/권한관리 제외)
-// viewer  : 대시보드·직원목록·엑셀다운로드 읽기 전용
-const ROLES = { master: 3, admin: 2, viewer: 1 };
-// 메뉴별 최소 권한
-const MENU_ROLE = {
-  dashboard: 'viewer', employees: 'viewer', resign: 'admin',
-  assign: 'admin', leave: 'admin', eval: 'admin',
-  discipline: 'admin', photos: 'admin', upload: 'admin',
-  download: 'viewer', settings: 'master',
+// 메뉴별 기본 권한 (Master는 항상 전체 허용)
+const DEFAULT_PERMISSIONS = {
+  dashboard:true, employees:true, resign:false, assign:false,
+  leave:false, eval:false, discipline:false, photos:false,
+  upload:false, download:true, settings:false
 };
+
+// 현재 유저의 메뉴 권한 (로그인 시 로드)
+let _myPermissions = {...DEFAULT_PERMISSIONS};
+let _canViewEval = false; // 평가 열람 권한 (별도 관리)
 
 const ALL_MENUS=[
   {id:'dashboard',label:'대시보드',icon:'M2 2h5v5H2zM9 2h5v5H9zM2 9h5v5H2zM9 9h5v5H9z'},
@@ -347,12 +345,15 @@ let _currentRole='viewer'; // 현재 사용자 권한
 let _masterTransferTarget=null; // 권한 양도 대상
 
 // ══════════════ 권한 헬퍼 ══════════════
+// 권한 체크 — Master는 항상 true, 나머지는 메뉴 권한 확인
 function hasRole(required){
-  return ROLES[_currentRole] >= ROLES[required];
+  if(_currentRole==='master') return true;
+  if(required==='master') return _currentRole==='master';
+  return true; // hasRole은 이제 메뉴 권한과 분리, 하위 호환용
 }
-function requireRole(required, fn){
-  if(!hasRole(required)){toast('권한이 없습니다.','err');return}
-  fn();
+function canAccess(menuId){
+  if(_currentRole==='master') return true;
+  return !!_myPermissions[menuId];
 }
 
 // ══════════════ DATE HELPERS ══════════════
@@ -429,8 +430,13 @@ async function dbGetAllAdmins(){
 }
 async function dbGetMyRole(userId){
   try{
-    const{data}=await supa.from('admins').select('role').eq('user_id',userId).maybeSingle();
-    return data?data.role:'viewer';
+    const{data}=await supa.from('admins').select('role,menu_permissions,can_view_eval').eq('user_id',userId).maybeSingle();
+    if(data){
+      _myPermissions = data.menu_permissions || {...DEFAULT_PERMISSIONS};
+      _canViewEval = (_currentRole==='master') ? true : (data.can_view_eval||false);
+      return data.role||'viewer';
+    }
+    return 'viewer';
   }catch(e){console.error('role load fail:',e);return'viewer'}
 }
 async function dbGetAllAdmins(){
@@ -438,12 +444,13 @@ async function dbGetAllAdmins(){
   if(error){console.error('admins load error',error);return[]}
   return data||[];
 }
-async function dbUpsertAdminRole(userId,email,role){
-  const{data:ex}=await supa.from('admins').select('id').eq('user_id',userId);
-  if(ex&&ex.length>0){
-    await supa.from('admins').update({role,email}).eq('user_id',userId);
+async function dbUpsertAdminRole(userId,email,role,menuPermissions){
+  const perms = menuPermissions || DEFAULT_PERMISSIONS;
+  const{data:ex}=await supa.from('admins').select('id').eq('user_id',userId).maybeSingle();
+  if(ex){
+    await supa.from('admins').update({role,email,menu_permissions:perms}).eq('user_id',userId);
   } else {
-    await supa.from('admins').insert({user_id:userId,email,role});
+    await supa.from('admins').insert({user_id:userId,email,role,menu_permissions:perms});
   }
 }
 async function dbDeleteAdmin(userId){
@@ -654,6 +661,7 @@ async function onLogin(user){
 
   // ✅ 권한 로드
   _currentRole = await dbGetMyRole(user.id);
+  if(_currentRole==='master') _canViewEval=true;
   // admins 테이블에 아무도 없으면 첫 로그인 유저를 master로 자동 등록
   const admins = await dbGetAllAdmins();
   if(admins.length===0){
@@ -1038,13 +1046,33 @@ function renderResign(){
     </div>
    </div>
    <div class="card"><div class="card-h"><span class="card-t">퇴직 내역</span></div>
-    <div class="tw"><table><thead><tr><th>사번</th><th>이름</th><th>그룹/팀</th><th>입사일</th><th>퇴직일</th><th>사유</th></tr></thead>
-    <tbody>${list.map(e=>`<tr><td><span class="bdg bdg-mg">${e.empId||'-'}</span></td><td>${e.nameKr||'-'}</td><td style="font-size:11px">${e.group||''} / ${e.team||''}</td><td style="font-size:11px">${e.joinDate||'-'}</td><td style="font-size:11px;color:var(--red);font-weight:700">${e.resignDate||'-'}</td><td style="font-size:11px">${e.resignReason1||''}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">없음</td></tr>'}</tbody></table></div>
+    <div class="tw"><table>    <thead><tr><th>사번</th><th>이름</th><th>그룹/팀</th><th>입사일</th><th>퇴직일</th><th>사유</th><th></th></tr></thead>
+    <tbody>${list.map(e=>`<tr><td><span class="bdg bdg-mg">${e.empId||'-'}</span></td><td>${e.nameKr||'-'}</td><td style="font-size:11px">${e.group||''} / ${e.team||''}</td><td style="font-size:11px">${e.joinDate||'-'}</td><td style="font-size:11px;color:var(--red);font-weight:700">${e.resignDate||'-'}</td><td style="font-size:11px">${e.resignReason1||''}</td><td><button class="btn btn-s btn-xs _btn-cancel-resign" data-id="${e._id}" data-name="${e.nameKr||''}">↩ 취소</button></td></tr>`).join('')||'<tr><td colspan="7" class="empty">없음</td></tr>'}</tbody></table></div>
    </div>
   </div>`;
   const doSearch=()=>lookupEmployee(document.getElementById('resign-q').value.trim(),showResignForm);
   document.getElementById('btn-resign-search').addEventListener('click',doSearch);
   document.getElementById('resign-q').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch()});
+
+  // 퇴직 취소 버튼
+  document.querySelectorAll('._btn-cancel-resign').forEach(btn=>{
+    btn.addEventListener('click',async function(){
+      const id=this.dataset.id;const name=this.dataset.name;
+      if(!confirm(`${name} 님의 퇴직을 취소하고 재직(Emp) 상태로 복원할까요?`))return;
+      const emp=DB().find(x=>x._id===id);if(!emp)return;
+      const updated={...emp};
+      delete updated.resignDate;
+      delete updated.terminationType;
+      delete updated.resignReason1;
+      updated.status='Emp';
+      try{
+        await dbUpsertEmployee(updated);
+        await loadAllData();
+        renderResign();
+        toast(`${name} 퇴직 취소 완료`,'ok');
+      }catch(e){toast('처리 실패: '+e.message,'err')}
+    });
+  });
 }
 function showResignForm(emp){
   window._resignEmpId=emp._id;
@@ -1584,21 +1612,38 @@ async function renderSettings(){
   const admins=await dbGetAllAdmins();
   const isMaster=_currentRole==='master';
 
-  const adminRows=admins.map(a=>`
-    <tr>
-      <td style="font-size:12px">${a.email||'-'}</td>
+  const menuLabels={dashboard:'대시보드',employees:'개인 인사기록',resign:'퇴직 관리',assign:'발령 관리',leave:'휴복직 관리',eval:'평가 관리',discipline:'징계 관리',photos:'사진 관리',upload:'대량 업로드',download:'엑셀 다운로드',settings:'설정/권한관리'};
+
+  const adminRows=admins.map(a=>{
+    const perms=a.menu_permissions||{...DEFAULT_PERMISSIONS};
+    const isSelf=a.user_id===user.id;
+    const isMasterRow=a.role==='master';
+    const evalAllowed=isMasterRow?true:(a.can_view_eval||false);
+    const menuChecks=Object.entries(menuLabels).map(([k,l])=>{
+      const checked=isMasterRow?true:(perms[k]||false);
+      const disabled=isMasterRow||isSelf||!isMaster;
+      return`<label style="display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 5px;border:1px solid var(--g200);border-radius:4px;background:${checked?'var(--mg-l)':'#fff'};color:${checked?'var(--mg-d)':'var(--g500)'}">
+        <input type="checkbox" data-uid="${a.user_id}" data-email="${a.email||''}" data-role="${a.role}" data-menu="${k}" ${checked?'checked':''} ${disabled?'disabled':''} style="width:10px;height:10px"> ${l}
+      </label>`;
+    }).join('');
+    const evalToggle=isMasterRow
+      ?`<span style="font-size:10px;color:var(--g400)">항상 허용</span>`
+      :`<label style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;cursor:${isSelf||!isMaster?'default':'pointer'};color:${evalAllowed?'var(--green)':'var(--red)'}">
+          <input type="checkbox" data-uid="${a.user_id}" data-email="${a.email||''}" data-role="${a.role}" data-eval="1"
+            ${evalAllowed?'checked':''} ${isSelf||!isMaster?'disabled':''}
+            style="width:12px;height:12px;accent-color:var(--green)">
+          ${evalAllowed?'✅ 평가 열람 허용':'🔒 평가 열람 차단'}
+        </label>`;
+    return`<tr>
+      <td style="font-size:12px">${a.email||'-'}${isSelf?'<span style="font-size:10px;color:var(--g400);margin-left:4px">(본인)</span>':''}</td>
       <td>${roleBdg(a.role)}</td>
-      <td>
-        ${isMaster&&a.user_id!==user.id?`
-          <select class="fsel" style="padding:3px 6px;font-size:11px" onchange="changeRole('${a.user_id}','${a.email}',this.value)">
-            <option value="master"${a.role==='master'?' selected':''}>Master</option>
-            <option value="admin"${a.role==='admin'?' selected':''}>Admin</option>
-            <option value="viewer"${a.role==='viewer'?' selected':''}>Viewer</option>
-          </select>
-          <button class="btn btn-d btn-xs" style="margin-left:4px" onclick="removeAdmin('${a.user_id}')">삭제</button>
-        `:a.user_id===user.id?'<span style="font-size:11px;color:var(--g400)">(본인)</span>':''}
+      <td style="line-height:2">${menuChecks}</td>
+      <td style="min-width:120px">${evalToggle}</td>
+      <td style="white-space:nowrap">
+        ${isMaster&&!isSelf&&!isMasterRow?`<button class="btn btn-d btn-xs" onclick="removeAdmin('${a.user_id}')">삭제</button>`:''}
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 
   document.getElementById('cnt').innerHTML=`
   <div style="max-width:760px;display:flex;flex-direction:column;gap:14px">
@@ -1618,8 +1663,8 @@ async function renderSettings(){
    <div class="card"><div class="card-h"><span class="card-t">🔐 권한 관리</span></div>
     <div class="card-b">
      <div class="info-box">Master만 권한을 변경할 수 있습니다. Master는 1명만 존재합니다.<br>권한 등급: Master(전체) > Admin(읽기+쓰기) > Viewer(읽기전용)</div>
-     <div class="tw"><table><thead><tr><th>이메일</th><th>권한</th><th>관리</th></tr></thead>
-     <tbody id="admin-rows">${adminRows||'<tr><td colspan="3" class="empty">없음</td></tr>'}</tbody></table></div>
+     <div class="tw"><table><thead><tr><th>이메일</th><th>역할</th><th>메뉴 권한</th><th>평가 열람</th><th></th></tr></thead>
+     <tbody id="admin-rows">${adminRows||'<tr><td colspan="5" class="empty">없음</td></tr>'}</tbody></table></div>
     </div>
    </div>
 
@@ -1665,6 +1710,44 @@ async function renderSettings(){
     </div>
    </div>`:''}
   </div>`;
+
+  // 메뉴 권한 체크박스 즉시 저장
+  if(isMaster){
+    // 메뉴 권한
+    document.querySelectorAll('input[data-menu]').forEach(cb=>{
+      cb.addEventListener('change',async function(){
+        const uid=this.dataset.uid;
+        const email=this.dataset.email;
+        const role=this.dataset.role;
+        const menuKey=this.dataset.menu;
+        const target=admins.find(a=>a.user_id===uid);
+        if(!target)return;
+        const perms={...(target.menu_permissions||{...DEFAULT_PERMISSIONS})};
+        perms[menuKey]=this.checked;
+        const lbl=this.closest('label');
+        if(lbl){lbl.style.background=this.checked?'var(--mg-l)':'#fff';lbl.style.color=this.checked?'var(--mg-d)':'var(--g500)'}
+        try{await dbUpsertAdminRole(uid,email,role,perms);toast(`${email} 메뉴 권한 저장`,'ok')}
+        catch(e){toast('저장 실패','err')}
+      });
+    });
+    // 평가 열람 권한
+    document.querySelectorAll('input[data-eval]').forEach(cb=>{
+      cb.addEventListener('change',async function(){
+        const uid=this.dataset.uid;
+        const email=this.dataset.email;
+        const canView=this.checked;
+        const lbl=this.closest('label');
+        try{
+          await supa.from('admins').update({can_view_eval:canView}).eq('user_id',uid);
+          if(lbl){
+            lbl.style.color=canView?'var(--green)':'var(--red)';
+            lbl.childNodes[lbl.childNodes.length-1].textContent=' '+(canView?'✅ 평가 열람 허용':'🔒 평가 열람 차단');
+          }
+          toast(`${email} 평가 열람 ${canView?'허용':'차단'}`,'ok');
+        }catch(e){toast('저장 실패','err')}
+      });
+    });
+  }
 
   // 초대 버튼
   document.getElementById('btn-send-invite')?.addEventListener('click',async()=>{
