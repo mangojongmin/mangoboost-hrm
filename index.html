@@ -816,7 +816,13 @@ function renderEmpTbl(){
   }).join('');
   const tblEl=document.getElementById('emp-tbl');
   tblEl.innerHTML=`<div class="tw"><table><thead><tr><th>EMP ID</th><th>이름</th><th>Group</th><th>Team</th><th>Job Title</th><th>고용형태</th><th>상태</th><th>Tech</th><th>입사일</th><th>퇴직일</th></tr></thead><tbody>${rows||'<tr><td colspan="10" class="empty">데이터 없음</td></tr>'}</tbody></table></div>`;
-  tblEl.querySelectorAll('._emp-row').forEach(row=>row.addEventListener('click',()=>openDetailModal(row.dataset.id)));
+  // 이벤트 위임: 컨테이너에 한 번만 등록, 기존 리스너 제거 후 재등록
+  tblEl.removeEventListener('click', tblEl._empClickHandler);
+  tblEl._empClickHandler = function(e){
+    const row = e.target.closest('._emp-row');
+    if(row) openDetailModal(row.dataset.id);
+  };
+  tblEl.addEventListener('click', tblEl._empClickHandler);
   let pg=`<div class="pg"><span class="pg-inf">총 ${total}명</span><div class="pg-bs"><div class="pg-b" id="pg-prev">‹</div>`;
   for(let i=1;i<=Math.min(pages,7);i++)pg+=`<div class="pg-b${i===empPage?' on':''}" data-p="${i}">${i}</div>`;
   if(pages>7)pg+=`<span style="padding:0 4px">…</span><div class="pg-b${pages===empPage?' on':''}" data-p="${pages}">${pages}</div>`;
