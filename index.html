@@ -858,10 +858,10 @@ async function saveEmp(){
   const obj={};keys.forEach(k=>{const v=getV(k);if(v)obj[k]=v});
   if(obj.birthDate){const a=calcAge(obj.birthDate);if(a){obj.age=a;const y=+a;obj.ageGroup=y<30?'30대미만':y<40?'30~39세':y<50?'40~49세':y<60?'50~59세':'60세이상'}}
   if(curEditId)obj._id=curEditId;
-  showLoading(true);
+  const btn=document.getElementById('m-edit-save');btn.textContent='저장 중...';btn.disabled=true;
   try{await dbUpsertEmployee(obj);await loadAllData();CM('m-edit');renderEmps();toast(curEditId?'수정 완료':'직원 추가 완료','ok')}
   catch(e){toast('저장 실패: '+e.message,'err')}
-  showLoading(false);
+  btn.textContent='저장';btn.disabled=false;
 }
 async function openNoteModal(empId){
   curNoteEmpId=empId;const e=DB().find(x=>x._id===empId)||{};
@@ -872,10 +872,10 @@ async function openNoteModal(empId){
 }
 async function saveNote(){
   const c=document.getElementById('note-content').value;
-  showLoading(true);
+  const btn=document.getElementById('m-note-save');btn.textContent='저장 중...';btn.disabled=true;
   try{await dbUpsertNote(curNoteEmpId,c);await loadAllData();CM('m-note');openDetailModal(curNoteEmpId);toast('저장 완료','ok')}
-  catch(e){toast('저장 실패','err')}
-  showLoading(false);
+  catch(e){toast('저장 실패: '+e.message,'err')}
+  btn.textContent='저장';btn.disabled=false;
 }
 
 // ══════════════ RESIGN ══════════════
@@ -1095,10 +1095,13 @@ function openAddLeave(empId){
 async function saveLeave(){
   const type=document.getElementById('lv-type').value;const start=document.getElementById('lv-start').value;
   if(!type||!start){toast('휴직종류와 시작일을 입력하세요.','err');return}
-  showLoading(true);
-  try{await dbAddLeave(curLeaveEmpId,{leaveType:type,startDate:start,endDate:document.getElementById('lv-end').value,returnDate:document.getElementById('lv-return').value,note:document.getElementById('lv-note').value});await loadAllData();CM('m-leave');const e=DB().find(x=>x._id===curLeaveEmpId);if(e)showLeaveForm(e);showPopup('🏖️','휴복직 등록 완료','등록 완료',null)}
-  catch(e){toast('저장 실패','err')}
-  showLoading(false);
+  const btn=document.getElementById('m-leave-save');btn.textContent='저장 중...';btn.disabled=true;
+  try{
+    await dbAddLeave(curLeaveEmpId,{leaveType:type,startDate:start,endDate:document.getElementById('lv-end').value,returnDate:document.getElementById('lv-return').value,note:document.getElementById('lv-note').value});
+    await loadAllData();CM('m-leave');const e=DB().find(x=>x._id===curLeaveEmpId);if(e)showLeaveForm(e);
+    showPopup('🏖️','휴복직 등록 완료','등록 완료',null);
+  }catch(e){toast('저장 실패: '+e.message,'err')}
+  btn.textContent='저장';btn.disabled=false;
 }
 
 // ══════════════ EVAL ══════════════
@@ -1166,10 +1169,12 @@ function openAddEval(empId){
 async function saveEval(){
   const yr=parseInt(document.getElementById('ev-yr').value);const type=document.getElementById('ev-type').value;const grade=document.getElementById('ev-grade').value;
   if(!yr||!type||!grade){toast('모든 항목을 입력하세요.','err');return}
-  showLoading(true);
-  try{await dbUpsertEvaluation(curEvalEmpId,yr,type,grade,document.getElementById('ev-note').value);await loadAllData();CM('m-eval');const e=DB().find(x=>x._id===curEvalEmpId);if(e)showEvalForm(e);toast('평가 등록 완료','ok')}
-  catch(e){toast('저장 실패','err')}
-  showLoading(false);
+  const btn=document.getElementById('m-eval-save');btn.textContent='저장 중...';btn.disabled=true;
+  try{
+    await dbUpsertEvaluation(curEvalEmpId,yr,type,grade,document.getElementById('ev-note').value);
+    await loadAllData();CM('m-eval');const e=DB().find(x=>x._id===curEvalEmpId);if(e)showEvalForm(e);toast('평가 등록 완료','ok');
+  }catch(e){toast('저장 실패: '+e.message,'err')}
+  btn.textContent='저장';btn.disabled=false;
 }
 function dlEvalTemplate(){
   const yr=new Date().getFullYear();const wb=XLSX.utils.book_new();
