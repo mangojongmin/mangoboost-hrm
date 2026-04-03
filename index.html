@@ -713,7 +713,7 @@ function openDetailModal(id){
     const ea=ADB()[id]||[];
     const discs=DCDB()[id]||[];
     const leaveHtml=lv?`<div class="leave-info-box">🏖️ 휴직 중 (${lv.leaveType||'휴직'}) · ${lv.startDate} ~ ${lv.endDate||'미정'}</div>`:'';
-    const resignHtml=isResigned?`<div class="resign-info-box">🔴 퇴직 · ${e.resignDate||'-'} · ${e.resignReason1||e.terminationType||'-'}</div>`:'';
+    const resignHtml=isResigned?`<div class="resign-info-box">🔴 퇴직 · ${e.resignDate||'-'}${e.resignReason1?` · ${e.resignReason1}`:e.terminationType?` · ${e.terminationType}`:''}</div>`:'';
     const years=[...new Set(ee.map(x=>x.year))].sort().reverse();
     const evalRows=!_canViewEval?'':years.map(yr=>{
       const pv=ee.find(x=>x.year===yr&&x.type==='performance');
@@ -1053,29 +1053,62 @@ function showEvalForm(e){
   curEvalEmpId=e._id;
   const ee=(EVDB()[e._id]||[]).sort((a,b)=>b.year-a.year);
   const years=[...new Set(ee.map(x=>x.year))].sort().reverse();
-  const rows=years.map(yr=>{
-    const pv=ee.find(x=>x.year===yr&&x.type==='performance');
-    const cv=ee.find(x=>x.year===yr&&x.type==='corevalue');
-    const fg=ee.find(x=>x.year===yr&&x.type==='final');
-    return`<tr>
-      <td style="text-align:center;font-weight:700">${yr}</td>
-      <td style="text-align:center">${pv?`<span class="bdg bdg-tech">${pv.grade}</span> <button class="btn btn-d btn-xs _del-eval" data-yr="${yr}" data-type="performance">×</button>`:'-'}</td>
-      <td style="text-align:center">${cv?`<span class="bdg bdg-nt">${cv.grade}</span> <button class="btn btn-d btn-xs _del-eval" data-yr="${yr}" data-type="corevalue">×</button>`:'-'}</td>
-      <td style="text-align:center">${fg?`<span class="bdg" style="background:var(--mg);color:#fff">${fg.grade}</span> <button class="btn btn-d btn-xs _del-eval" data-yr="${yr}" data-type="final">×</button>`:'-'}</td>
-    </tr>`;
-  }).join('');
+
+  function evalCell(yr,type,bdgClass){
+    const ev=ee.find(x=>x.year===yr&&x.type===type);
+    if(!ev)return'-';
+    return`<div style="display:flex;align-items:center;justify-content:center;gap:4px">
+      <span class="bdg ${bdgClass}">${ev.grade}</span>
+      <button class="btn btn-s btn-xs _edit-eval" data-yr="${yr}" data-type="${type}" data-grade="${ev.grade}" title="수정">✏️</button>
+      <button class="btn btn-d btn-xs _del-eval" data-yr="${yr}" data-type="${type}" title="삭제">×</button>
+    </div>`;
+  }
+
+  const rows=years.map(yr=>`<tr>
+    <td style="text-align:center;font-weight:700">${yr}</td>
+    <td style="text-align:center">${evalCell(yr,'performance','bdg-tech')}</td>
+    <td style="text-align:center">${evalCell(yr,'corevalue','bdg-nt')}</td>
+    <td style="text-align:center">${evalCell(yr,'final','bdg-mg')}</td>
+  </tr>`).join('');
+
   document.getElementById('eval-emp-result').innerHTML=`<div style="margin-top:12px">
-   <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--g100);margin-bottom:12px">${avHTML(e,32)}<div><div style="font-size:13px;font-weight:700">${e.nameKr}</div><div style="font-size:11px;color:var(--g500)">${e.empId||''} · ${e.group||''}</div></div>
-   <button class="btn btn-p btn-sm" id="btn-add-eval" style="margin-left:auto">+ 평가 추가</button></div>
+   <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--g100);margin-bottom:12px">
+    ${avHTML(e,32)}<div><div style="font-size:13px;font-weight:700">${e.nameKr}</div><div style="font-size:11px;color:var(--g500)">${e.empId||''} · ${e.group||''}</div></div>
+    <button class="btn btn-p btn-sm" id="btn-add-eval" style="margin-left:auto">+ 평가 추가</button>
+   </div>
    <table class="ed-table"><thead><tr><th style="text-align:center">년도</th><th style="text-align:center">Performance</th><th style="text-align:center">Core Value</th><th style="text-align:center">Final</th></tr></thead>
-   <tbody>${rows||'<tr><td colspan="4" class="empty">없음</td></tr>'}</tbody></table></div>`;
+   <tbody>${rows||'<tr><td colspan="4" class="empty">없음</td></tr>'}</tbody></table>
+  </div>`;
+
   document.getElementById('btn-add-eval').addEventListener('click',()=>openAddEval(e._id));
+
+  // 삭제
   document.querySelectorAll('._del-eval').forEach(btn=>btn.addEventListener('click',async function(){
-    const yr=+this.dataset.yr;const type=this.dataset.type;
-    const typeLabel={performance:'Performance',corevalue:'Core Value',final:'Final Grade'};
-    if(!confirm(`${yr}년 ${typeLabel[type]} 평가를 삭제할까요?`))return;
+    const yr=+this.dataset.yr,type=this.dataset.type;
+    const lbl={performance:'Performance',corevalue:'Core Value',final:'Final'};
+    if(!confirm(`${yr}년 ${lbl[type]} 평가를 삭제할까요?`))return;
     try{await dbDeleteEvaluation(e._id,yr,type);await loadAllData();showEvalForm(DB().find(x=>x._id===e._id)||e);toast('삭제 완료','ok')}
-    catch(err){toast('삭제 실패: '+err.message,'err')}
+    catch(err){toast('삭제 실패','err')}
+  }));
+
+  // 수정 — 클릭 시 해당 셀을 select로 인라인 교체
+  document.querySelectorAll('._edit-eval').forEach(btn=>btn.addEventListener('click',function(){
+    const yr=+this.dataset.yr,type=this.dataset.type,curGrade=this.dataset.grade;
+    const grades=EVAL_GRADES[type]||[];
+    const cell=this.closest('td');
+    cell.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;gap:4px">
+      <select class="fsel2" id="ev-edit-sel" style="padding:3px 6px;font-size:11px;width:80px">
+        ${grades.map(g=>`<option${g===curGrade?' selected':''}>${g}</option>`).join('')}
+      </select>
+      <button class="btn btn-p btn-xs" id="ev-edit-ok">저장</button>
+      <button class="btn btn-s btn-xs" id="ev-edit-cancel">취소</button>
+    </div>`;
+    document.getElementById('ev-edit-cancel').addEventListener('click',()=>showEvalForm(DB().find(x=>x._id===e._id)||e));
+    document.getElementById('ev-edit-ok').addEventListener('click',async()=>{
+      const newGrade=document.getElementById('ev-edit-sel').value;
+      try{await dbUpsertEvaluation(e._id,yr,type,newGrade,'');await loadAllData();showEvalForm(DB().find(x=>x._id===e._id)||e);toast('수정 완료','ok')}
+      catch(err){toast('수정 실패','err')}
+    });
   }));
 }
 function openAddEval(empId){
@@ -1097,12 +1130,25 @@ async function saveEval(){
   catch(e){toast('저장 실패','err')}
 }
 function dlEvalTemplate(){
-  const yr=new Date().getFullYear();const wb=XLSX.utils.book_new();
-  const ws=XLSX.utils.aoa_to_sheet([['EMP ID','KR Name','Year','Eval Type (performance/corevalue/final)','Grade','Note'],['EMP001','홍길동',yr,'performance','MVC',''],['EMP001','홍길동',yr,'corevalue','EX',''],['EMP001','홍길동',yr,'final','O','']]);
+  const yr=new Date().getFullYear();
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([
+    ['EMP ID','KR Name','Year','Performance','Core Value','Final'],
+    ['EMP001','홍길동',yr,'MVC','EX','O'],
+    ['EMP002','김철수',yr,'VC','ME','EE'],
+  ]);
   XLSX.utils.book_append_sheet(wb,ws,'Eval_Upload');
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['유형','등급(높은순)'],['performance','MVC/VC/FC/PC/LC'],['corevalue','EX/ME/ND'],['final','O/EE/ME/BE/NI']]),'등급안내');
-  XLSX.writeFile(wb,'MangoBoost_Eval_Template.xlsx');toast('다운로드 완료','ok');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([
+    ['컬럼','입력값 예시'],
+    ['Performance','MVC / VC / FC / PC / LC'],
+    ['Core Value','EX / ME / ND'],
+    ['Final','O / EE / ME / BE / NI'],
+    ['※ 비워두면 해당 항목 미등록',''],
+  ]),'등급안내');
+  XLSX.writeFile(wb,'MangoBoost_Eval_Template.xlsx');
+  toast('다운로드 완료','ok');
 }
+
 async function handleEvalUpload(input){
   const file=input.files[0];if(!file)return;
   const reader=new FileReader();
@@ -1112,15 +1158,22 @@ async function handleEvalUpload(input){
       const json=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
       const data=DB();let ok=0,skip=0;
       for(const row of json){
-        const empId=String(row['EMP ID']||'').trim();const year=parseInt(row['Year']||0);
-        const type=String(row['Eval Type (performance/corevalue/final)']||'').trim().toLowerCase();
-        const grade=String(row['Grade']||'').trim();const note=String(row['Note']||'').trim();
-        if(!empId||!year||!type||!grade){skip++;continue}
+        const empId=String(row['EMP ID']||'').trim();
+        const year=parseInt(row['Year']||0);
+        const pv=String(row['Performance']||'').trim();
+        const cv=String(row['Core Value']||'').trim();
+        const fg=String(row['Final']||'').trim();
+        if(!empId||!year){skip++;continue}
         const emp=data.find(e=>e.empId===empId);if(!emp){skip++;continue}
-        try{await dbUpsertEvaluation(emp._id,year,type,grade,note);ok++}catch(e){skip++}
+        try{
+          if(pv)await dbUpsertEvaluation(emp._id,year,'performance',pv,'');
+          if(cv)await dbUpsertEvaluation(emp._id,year,'corevalue',cv,'');
+          if(fg)await dbUpsertEvaluation(emp._id,year,'final',fg,'');
+          if(pv||cv||fg)ok++;else skip++;
+        }catch(e){skip++}
       }
       await loadAllData();renderEval();
-      showPopup('📊','평가 업로드 완료',`${ok}건 등록 완료 / ${skip}건 건너뜀`,null);
+      showPopup('📊','평가 업로드 완료',`${ok}명 등록 완료 / ${skip}건 건너뜀`,null);
     }catch(err){toast('오류: '+err.message,'err')}
   };
   reader.readAsBinaryString(file);input.value='';
