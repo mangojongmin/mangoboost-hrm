@@ -495,21 +495,23 @@ async function onLogin(user){
   _currentUser=user;
 
   const admins=await dbGetAllAdmins();
+  const me=admins.find(a=>a.user_id===user.id);
 
-  // 첫 번째 유저 → master 자동 등록
   if(admins.length===0){
+    // 첫 번째 유저 → master 자동 등록 (전체 권한)
     await dbUpsertAdminRole(user.id,user.email,'master',Object.fromEntries(ALL_MENUS.map(m=>[m.id,true])));
     _currentRole='master';
     _canViewEval=true;
     _myPermissions=Object.fromEntries(ALL_MENUS.map(m=>[m.id,true]));
+  } else if(!me){
+    // 초대된 신규 유저 → admin 역할, 메뉴 권한은 전부 off
+    const noPerms=Object.fromEntries(ALL_MENUS.map(m=>[m.id,false]));
+    await dbUpsertAdminRole(user.id,user.email,'admin',noPerms);
+    _currentRole='admin';
+    _canViewEval=false;
+    _myPermissions={...noPerms};
   } else {
-    // 이미 admins에 있는지 확인
-    const me=admins.find(a=>a.user_id===user.id);
-    if(!me){
-      // 없으면 viewer로 자동 등록 (master가 나중에 권한 조정 가능)
-      await dbUpsertAdminRole(user.id,user.email,'viewer',{...DEFAULT_PERMISSIONS});
-    }
-    // 권한 로드
+    // 기존 유저 → 저장된 권한 로드
     _currentRole=await dbGetMyRole(user.id);
     if(_currentRole==='master')_canViewEval=true;
   }
