@@ -493,10 +493,27 @@ async function initAuth(){
 }
 async function onLogin(user){
   _currentUser=user;
-  _currentRole=await dbGetMyRole(user.id);
-  if(_currentRole==='master')_canViewEval=true;
+
   const admins=await dbGetAllAdmins();
-  if(admins.length===0){await dbUpsertAdminRole(user.id,user.email,'master',{...DEFAULT_PERMISSIONS,...{resign:true,assign:true,leave:true,eval:true,discipline:true,photos:true,upload:true,settings:true}});_currentRole='master';_canViewEval=true;_myPermissions=Object.fromEntries(ALL_MENUS.map(m=>[m.id,true]))}
+
+  // 첫 번째 유저 → master 자동 등록
+  if(admins.length===0){
+    await dbUpsertAdminRole(user.id,user.email,'master',Object.fromEntries(ALL_MENUS.map(m=>[m.id,true])));
+    _currentRole='master';
+    _canViewEval=true;
+    _myPermissions=Object.fromEntries(ALL_MENUS.map(m=>[m.id,true]));
+  } else {
+    // 이미 admins에 있는지 확인
+    const me=admins.find(a=>a.user_id===user.id);
+    if(!me){
+      // 없으면 viewer로 자동 등록 (master가 나중에 권한 조정 가능)
+      await dbUpsertAdminRole(user.id,user.email,'viewer',{...DEFAULT_PERMISSIONS});
+    }
+    // 권한 로드
+    _currentRole=await dbGetMyRole(user.id);
+    if(_currentRole==='master')_canViewEval=true;
+  }
+
   document.getElementById('app').style.display='block';
   const name=user.user_metadata?.full_name||user.email?.split('@')[0]||'사용자';
   document.getElementById('sb-un').textContent=name;
@@ -1150,13 +1167,25 @@ function dlEvalTemplate(){
 }
 
 async function handleEvalUpload(input){
-  const file=input.files[0];if(!file)return;
+  const file=input.files[0];
+  if(!file){toast('파일을 선택해주세요.','err');return}
+
+  // 로딩 UI 표시
+  const ulBtn=document.getElementById('btn-eval-ul');
+  if(ulBtn){ulBtn.disabled=true;ulBtn.textContent='⏳ 업로드 중...'}
+  toast('파일 읽는 중...');
+
   const reader=new FileReader();
   reader.onload=async ev=>{
     try{
       const wb=XLSX.read(ev.target.result,{type:'binary',cellDates:false});
-      const json=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
-      const data=DB();let ok=0,skip=0;
+      const sheet=wb.Sheets[wb.SheetNames[0]];
+      const json=XLSX.utils.sheet_to_json(sheet,{defval:''});
+      if(!json.length){toast('데이터가 없습니다.','err');return}
+
+      toast(`총 ${json.length}행 처리 중... 잠시 기다려주세요.`);
+
+      const data=DB();let ok=0,skip=0,notFound=0;
       for(const row of json){
         const empId=String(row['EMP ID']||'').trim();
         const year=parseInt(row['Year']||0);
@@ -1164,19 +1193,34 @@ async function handleEvalUpload(input){
         const cv=String(row['Core Value']||'').trim();
         const fg=String(row['Final']||'').trim();
         if(!empId||!year){skip++;continue}
-        const emp=data.find(e=>e.empId===empId);if(!emp){skip++;continue}
+        const emp=data.find(e=>e.empId===empId);
+        if(!emp){notFound++;continue}
         try{
           if(pv)await dbUpsertEvaluation(emp._id,year,'performance',pv,'');
           if(cv)await dbUpsertEvaluation(emp._id,year,'corevalue',cv,'');
           if(fg)await dbUpsertEvaluation(emp._id,year,'final',fg,'');
           if(pv||cv||fg)ok++;else skip++;
-        }catch(e){skip++}
+        }catch(e){console.error('eval upsert error:',e);skip++}
       }
-      await loadAllData();renderEval();
-      showPopup('📊','평가 업로드 완료',`${ok}명 등록 완료 / ${skip}건 건너뜀`,null);
-    }catch(err){toast('오류: '+err.message,'err')}
+      await loadAllData();
+      renderEval();
+      showPopup('📊','평가 업로드 완료',`✅ ${ok}명 등록 완료<br>⚠️ EMP ID 없음 ${notFound}건<br>건너뜀 ${skip}건`,null);
+    }catch(err){
+      console.error('eval upload error:',err);
+      toast('오류: '+err.message,'err');
+    }finally{
+      // 로딩 UI 복원
+      const btn=document.getElementById('btn-eval-ul');
+      if(btn){btn.disabled=false;btn.textContent='📤 대량 업로드'}
+    }
   };
-  reader.readAsBinaryString(file);input.value='';
+  reader.onerror=()=>{
+    toast('파일 읽기 실패','err');
+    const btn=document.getElementById('btn-eval-ul');
+    if(btn){btn.disabled=false;btn.textContent='📤 대량 업로드'}
+  };
+  reader.readAsBinaryString(file);
+  input.value='';
 }
 
 // ══════════ DISCIPLINE ══════════
