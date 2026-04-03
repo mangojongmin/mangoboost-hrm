@@ -548,11 +548,9 @@ function NAV(pg){
   ({dashboard:renderDash,employees:renderEmps,resign:renderResign,assign:renderAssign,leave:renderLeave,eval:renderEval,discipline:renderDisc,photos:renderPhotos,upload:renderUpload,download:renderDlPage,settings:renderSettings})[pg]?.();
 }
 function buildSidebar(){
-  document.getElementById('sb-nav').innerHTML=ALL_MENUS.map(m=>{
-    const allowed=canAccess(m.id);
-    return`<div class="ni${allowed?'':' locked'}" data-pg="${m.id}"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="${m.icon}"/></svg>${m.label}${allowed?'':'<span class="lock">🔒</span>'}</div>`;
-  }).join('');
-  document.querySelectorAll('.ni[data-pg]:not(.locked)').forEach(el=>el.addEventListener('click',()=>NAV(el.dataset.pg)));
+  // 1. 권한 없는 메뉴는 아예 숨김 (master는 전체 표시)
+  document.getElementById('sb-nav').innerHTML=ALL_MENUS.filter(m=>canAccess(m.id)).map(m=>`<div class="ni" data-pg="${m.id}"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="${m.icon}"/></svg>${m.label}</div>`).join('');
+  document.querySelectorAll('.ni[data-pg]').forEach(el=>el.addEventListener('click',()=>NAV(el.dataset.pg)));
 }
 function OM(id){document.getElementById(id).classList.add('open')}
 function CM(id){document.getElementById(id).classList.remove('open')}
@@ -755,8 +753,9 @@ function openDetailModal(id){
        <div class="ed-name">${e.nameKr||'-'} <span style="font-size:13px;color:var(--g500);font-weight:400">${e.nameEn||''}</span></div>
        <div class="ed-badges">${empTypeBdg(e.empType)} ${stsBdg(e.status)} ${techBdg(e.techFlag)} ${e.gender?`<span class="bdg ${e.gender==='Male'?'bdg-tech':'bdg-nt'}">${e.gender}</span>`:''}</div>
        <div class="ed-kv"><span class="ed-k">사번</span><span class="ed-v">${e.empId||'-'}</span></div>
-       <div class="ed-kv"><span class="ed-k">Group/Team</span><span class="ed-v">${e.group||'-'} / ${e.team||'-'}</span></div>
+       <div class="ed-kv"><span class="ed-k">Group/Team</span><span class="ed-v">${e.group||'-'} / ${e.team||'-'}${e.concurrentOrg?` <span style="font-size:11px;color:var(--g500);font-weight:400">(겸직 : ${e.concurrentOrg})</span>`:''}</span></div>
        <div class="ed-kv"><span class="ed-k">Job Title</span><span class="ed-v">${e.jobTitle||'-'}</span></div>
+       <div class="ed-kv"><span class="ed-k">직책</span><span class="ed-v">${e.jobPosition||'-'}</span></div>
        <div class="ed-kv"><span class="ed-k">입사일</span><span class="ed-v">${e.joinDate||'-'}</span></div>
        <div class="ed-kv"><span class="ed-k">근속기간</span><span class="ed-v" style="color:var(--mg-d);font-weight:700">${fmtTenure(e.joinDate)}</span></div>
        ${leaveHtml}
@@ -925,6 +924,17 @@ function renderAssign(){
    <div class="card"><div class="card-h"><span class="card-t">발령 조회 / 등록</span></div>
     <div class="card-b"><div style="display:flex;gap:8px"><input class="finp" id="assign-q" placeholder="사번 또는 성명..."><button class="btn btn-p" id="btn-assign-search">조회</button></div><div id="assign-emp-result"></div></div>
    </div>
+   <div class="card"><div class="card-h"><span class="card-t">발령 대량 업로드</span></div>
+    <div class="card-b">
+     <div class="info-box">사번 기준으로 매칭합니다. 공란 항목은 공란으로 반영됩니다.</div>
+     <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button class="btn btn-s btn-sm" id="btn-assign-tpl">📥 업로드 양식</button>
+      <button class="btn btn-p btn-sm" id="btn-assign-ul">📤 대량 업로드</button>
+      <input type="file" id="assign-ul-file" accept=".xlsx,.xls,.csv" style="display:none">
+     </div>
+     <div id="assign-ul-result"></div>
+    </div>
+   </div>
    <div class="card"><div class="card-h"><span class="card-t">최근 발령 내역</span></div>
     <div class="tw"><table><thead><tr><th>발령일</th><th>이름</th><th>사번</th><th>발령명</th><th>이전(G/T)</th><th>이후(G/T)</th></tr></thead>
     <tbody>${rows||'<tr><td colspan="6" class="empty">없음</td></tr>'}</tbody></table></div>
@@ -933,6 +943,81 @@ function renderAssign(){
   const doS=()=>lookupEmployee(document.getElementById('assign-q').value.trim(),e=>showAssignForm(e));
   document.getElementById('btn-assign-search').addEventListener('click',doS);
   document.getElementById('assign-q').addEventListener('keydown',e=>{if(e.key==='Enter')doS()});
+  document.getElementById('btn-assign-tpl').addEventListener('click',dlAssignTemplate);
+  document.getElementById('btn-assign-ul').addEventListener('click',()=>document.getElementById('assign-ul-file').click());
+  document.getElementById('assign-ul-file').addEventListener('change',function(){handleAssignUpload(this)});
+}
+
+function dlAssignTemplate(){
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([
+    ['대상자 사번','대상자 KR Name','발령일','발령명','이전 C-Level','이전 Group','이전 Team','이전 겸직부서','이전 Job Title','이전 직책','이후 C-Level','이후 Group','이후 Team','이후 겸직부서','이후 Job Title','이후 직책','비고'],
+    ['EMP001','홍길동','2025-01-01','발령 (부서이동)','CEO','개발그룹','개발1팀','','Senior Engineer','','CEO','서비스그룹','서비스1팀','','Lead Engineer','Team Lead',''],
+  ]);
+  ws['!cols']=Array(17).fill({wch:16});
+  XLSX.utils.book_append_sheet(wb,ws,'Assign_Upload');
+  XLSX.writeFile(wb,'MangoBoost_Assign_Template.xlsx');
+  toast('다운로드 완료','ok');
+}
+
+async function handleAssignUpload(input){
+  const file=input.files[0];if(!file)return;
+  const btn=document.getElementById('btn-assign-ul');
+  if(btn){btn.disabled=true;btn.textContent='⏳ 업로드 중...'}
+  toast('처리 중...');
+  const reader=new FileReader();
+  reader.onload=async ev=>{
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'binary',cellDates:false});
+      const json=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+      if(!json.length){toast('데이터가 없습니다.','err');return}
+      const data=DB();let ok=0,skip=0,notFound=0;
+      for(const row of json){
+        const empId=String(row['대상자 사번']||'').trim();
+        const assignDate=normDate(String(row['발령일']||'').trim());
+        const assignName=String(row['발령명']||'').trim();
+        if(!empId||!assignDate||!assignName){skip++;continue}
+        const emp=data.find(e=>e.empId===empId);
+        if(!emp){notFound++;continue}
+        const obj={
+          assignDate,assignName,
+          fromClevel:String(row['이전 C-Level']||''),
+          fromGroup:String(row['이전 Group']||''),
+          fromTeam:String(row['이전 Team']||''),
+          fromConc:String(row['이전 겸직부서']||''),
+          fromJobTitle:String(row['이전 Job Title']||''),
+          fromTitle:String(row['이전 직책']||''),
+          toClevel:String(row['이후 C-Level']||''),
+          toGroup:String(row['이후 Group']||''),
+          toTeam:String(row['이후 Team']||''),
+          toConc:String(row['이후 겸직부서']||''),
+          toJobTitle:String(row['이후 Job Title']||''),
+          toTitle:String(row['이후 직책']||''),
+          note:String(row['비고']||''),
+        };
+        try{
+          await dbAddAssignment(emp._id,obj);
+          // 이후 정보 개인기록 자동 반영
+          const updated={...emp};
+          if(obj.toClevel!=='')updated.clevel=obj.toClevel;
+          if(obj.toGroup!=='')updated.group=obj.toGroup;
+          if(obj.toTeam!=='')updated.team=obj.toTeam;
+          if(obj.toConc!=='')updated.concurrentOrg=obj.toConc;
+          if(obj.toJobTitle!=='')updated.jobTitle=obj.toJobTitle;
+          if(obj.toTitle!=='')updated.jobPosition=obj.toTitle;
+          await dbUpsertEmployee(updated);
+          ok++;
+        }catch(e){console.error(e);skip++}
+      }
+      await loadAllData();
+      renderAssign();
+      showPopup('📋','발령 업로드 완료',`✅ ${ok}건 등록 완료<br>⚠️ EMP ID 없음 ${notFound}건<br>건너뜀 ${skip}건`,null);
+    }catch(err){console.error(err);toast('오류: '+err.message,'err')}
+    finally{const b=document.getElementById('btn-assign-ul');if(b){b.disabled=false;b.textContent='📤 대량 업로드'}}
+  };
+  reader.onerror=()=>{toast('파일 읽기 실패','err');const b=document.getElementById('btn-assign-ul');if(b){b.disabled=false;b.textContent='📤 대량 업로드'}};
+  reader.readAsBinaryString(file);
+  input.value='';
 }
 function showAssignForm(e){
   curAssignEmpId=e._id;
