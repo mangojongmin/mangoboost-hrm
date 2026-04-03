@@ -1393,17 +1393,35 @@ function openPhotoModal(empId){
   </div>
   ${ph[empId]?`<div style="margin-top:8px;text-align:center"><button class="btn btn-d btn-sm" id="btn-ph-del">사진 삭제</button></div>`:''}`;
 
-  document.getElementById('ph-uz').addEventListener('click',()=>document.getElementById('ph-file').click());
+  // 이벤트 중복 방지: 기존 핸들러 제거 후 재등록
+  const phUz = document.getElementById('ph-uz');
+  const phFile = document.getElementById('ph-file');
 
-  // ✅ 수정: File 객체를 dbUpsertPhoto에 직접 전달 (Storage 업로드)
-  document.getElementById('ph-file').addEventListener('change',async function(){
-    const file=this.files[0];if(!file)return;
+  // ph-uz 클릭 → 파일 선택창 열기
+  const phUzHandler = () => phFile.click();
+  phUz.replaceWith(phUz.cloneNode(true)); // 기존 리스너 제거
+  document.getElementById('ph-uz').addEventListener('click', phUzHandler);
+
+  // 파일 선택 후 Storage 업로드
+  const newPhFile = document.getElementById('ph-file');
+  newPhFile.replaceWith(newPhFile.cloneNode(true));
+  const freshPhFile = document.getElementById('ph-file');
+  document.getElementById('ph-uz').addEventListener('click', () => freshPhFile.click());
+
+  freshPhFile.addEventListener('change', async function(){
+    const file = this.files[0]; if(!file) return;
+    const prevBtn = document.getElementById('ph-uz');
+    if(prevBtn) prevBtn.textContent = '업로드 중...';
     try{
-      const url=await dbUpsertPhoto(curPhotoEmpId,file);
+      const url = await dbUpsertPhoto(curPhotoEmpId, file);
       await loadAllData();
-      document.getElementById('ph-preview').innerHTML=`<img src="${url}" style="width:90px;height:112px;object-fit:cover;border-radius:var(--r);border:2px solid var(--mg-m)">`;
+      const preview = document.getElementById('ph-preview');
+      if(preview) preview.innerHTML = `<img src="${url}" style="width:90px;height:112px;object-fit:cover;border-radius:var(--r);border:2px solid var(--mg-m)">`;
       toast('저장 완료','ok');
-    }catch(e){toast('저장 실패: '+e.message,'err')}
+    }catch(e){
+      console.error('사진 업로드 오류:', e);
+      toast('저장 실패: '+e.message,'err');
+    }
     this.value='';
   });
 
